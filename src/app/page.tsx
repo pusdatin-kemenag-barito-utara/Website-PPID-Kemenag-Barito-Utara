@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-12 md:py-24">
+    <div className="w-[90%] mx-auto px-4 py-12 md:py-24">
       <section className="text-center space-y-6">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
           Selamat Datang di <span className="text-primary">PPID</span> Kemenag Barito Utara

@@ -1,0 +1,22 @@
+[providers.node]
+# Gunakan versi Node.js yang stabil
+node_version = "20"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+# Pastikan Drizzle migrasi berjalan sebelum build jika diperlukan, atau hanya build Next.js
+cmds = ["npm run build"]
+
+[start]
+# Skrip start standar untuk Next.js production server
+cmd = "npm start"
+
+[variables]
+# Matikan telemetri Next.js untuk mempercepat build dan menghemat resource
+NEXT_TELEMETRY_DISABLED = "1"
+NODE_ENV = "production"

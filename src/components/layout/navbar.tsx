@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import {
@@ -56,6 +56,9 @@ const standarLayananItems = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  if (pathname?.startsWith('/admin')) return null;
 
   // Helper to check if a route is active
   const isActive = (path: string) => {
@@ -71,7 +74,7 @@ export function Navbar() {
   return (
     <header className="w-full bg-background shadow-sm">
       {/* Top Tier */}
-      <div className="container max-w-7xl mx-auto px-4 py-4 md:py-6 flex justify-between items-center">
+      <div className="w-[90%] mx-auto px-4 py-4 md:py-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Image src="/logo-kemenag.svg" alt="Logo Kemenag" width={56} height={56} priority className="object-contain" />
           <div className="flex flex-col">
@@ -81,31 +84,42 @@ export function Navbar() {
         </div>
         
         <div className="hidden lg:flex items-center gap-6">
-          <div className="text-xs font-bold tracking-wide">
-            <span className="text-[#007144]">HAPAKAT</span>{" "}
-            <span className="text-orange-500 font-medium">Harmonis,</span>{" "}
-            <span className="text-orange-500 font-medium">Amanah,</span>{" "}
-            <span className="text-orange-500 font-medium">Profesional,</span>{" "}
-            <span className="text-orange-500 font-medium">Akuntabel,</span>{" "}
-            <span className="text-orange-500 font-medium">Kreatif,</span>{" "}
-            <span className="text-orange-500 font-medium">Adil dan</span>{" "}
-            <span className="text-orange-500 font-medium">Transparan</span>
+          <div className="flex items-center gap-2">
+            <Image src="/hapakat.png" alt="Logo Hapakat" width={90} height={24} className="object-contain" />
+            <div className="text-[10px] font-bold tracking-tight text-[#007144] hidden xl:block">
+              <span className="text-orange-500 text-[11px]">H</span>armonis,{" "}
+              <span className="text-orange-500 text-[11px]">A</span>manah,{" "}
+              <span className="text-orange-500 text-[11px]">P</span>rofesional,{" "}
+              <span className="text-orange-500 text-[11px]">A</span>kuntabel,{" "}
+              <span className="text-orange-500 text-[11px]">K</span>reatif,{" "}
+              <span className="text-orange-500 text-[11px]">A</span>dil dan{" "}
+              <span className="text-orange-500 text-[11px]">T</span>ransparan
+            </div>
           </div>
           <ThemeToggle />
+        </div>
+
+        {/* Mobile menu button and theme toggle */}
+        <div className="flex lg:hidden items-center gap-3">
+          <ThemeToggle />
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 -mr-2 text-muted-foreground hover:text-[#007144] focus:outline-none"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
 
       {/* Bottom Tier */}
       <div className="border-t border-border/50 hidden md:block">
-        <div className="container max-w-7xl mx-auto px-4 flex items-center justify-center relative">
+        <div className="w-[90%] mx-auto px-4 flex items-center justify-center relative">
           <NavigationMenu>
             <NavigationMenuList className="gap-2">
               <NavigationMenuItem>
-                <Link href="/" legacyBehavior passHref>
-                  <NavigationMenuLink className={navItemClass("/")}>
-                    BERANDA
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink render={<Link href="/" className={navItemClass("/")} />}>
+                  BERANDA
+                </NavigationMenuLink>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
@@ -164,11 +178,9 @@ export function Navbar() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <Link href="/regulasi" legacyBehavior passHref>
-                  <NavigationMenuLink className={navItemClass("/regulasi")}>
-                    REGULASI
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink render={<Link href="/regulasi" className={navItemClass("/regulasi")} />}>
+                  REGULASI
+                </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
@@ -180,6 +192,91 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-border/50 bg-background overflow-y-auto max-h-[80vh]">
+          <nav className="flex flex-col p-4 space-y-2">
+            <Link 
+              href="/" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={cn("px-4 py-3 rounded-md font-medium transition-colors", isActive("/") ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+            >
+              Beranda
+            </Link>
+            
+            <div className="px-4 py-2 font-bold text-xs text-muted-foreground uppercase tracking-wider mt-2">Profil</div>
+            {profilItems.map(item => (
+              <Link 
+                key={item.title} 
+                href={item.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn("px-4 py-2 text-sm rounded-md transition-colors pl-8", isActive(item.href) ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+              >
+                {item.title}
+              </Link>
+            ))}
+
+            <div className="px-4 py-2 font-bold text-xs text-muted-foreground uppercase tracking-wider mt-2">Data Informasi</div>
+            {dataInformasiItems.map(item => (
+              <Link 
+                key={item.title} 
+                href={item.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn("px-4 py-2 text-sm rounded-md transition-colors pl-8", isActive(item.href) ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+              >
+                {item.title}
+              </Link>
+            ))}
+
+            <div className="px-4 py-2 font-bold text-xs text-muted-foreground uppercase tracking-wider mt-2">Informasi Publik</div>
+            {informasiPublikItems.map(item => (
+              <Link 
+                key={item.title} 
+                href={item.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn("px-4 py-2 text-sm rounded-md transition-colors pl-8", isActive(item.href) ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+              >
+                {item.title}
+              </Link>
+            ))}
+
+            <div className="px-4 py-2 font-bold text-xs text-muted-foreground uppercase tracking-wider mt-2">Layanan Informasi</div>
+            {layananInformasiItems.map(item => (
+              <Link 
+                key={item.title} 
+                href={item.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn("px-4 py-2 text-sm rounded-md transition-colors pl-8", isActive(item.href) ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+              >
+                {item.title}
+              </Link>
+            ))}
+
+            <div className="px-4 py-2 font-bold text-xs text-muted-foreground uppercase tracking-wider mt-2">Standar Layanan</div>
+            {standarLayananItems.map(item => (
+              <Link 
+                key={item.title} 
+                href={item.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn("px-4 py-2 text-sm rounded-md transition-colors pl-8", isActive(item.href) ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+              >
+                {item.title}
+              </Link>
+            ))}
+
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <Link 
+                href="/regulasi" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn("px-4 py-3 rounded-md font-medium transition-colors block", isActive("/regulasi") ? "bg-[#007144]/10 text-[#007144]" : "hover:bg-accent")}
+              >
+                Regulasi
+              </Link>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
@@ -190,19 +287,19 @@ const ListItem = React.forwardRef<
 >(({ className, title, children, href, ...props }, ref) => {
   return (
     <li>
-      <Link href={href || "#"} legacyBehavior passHref>
-        <NavigationMenuLink
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          {children && <p className="line-clamp-2 text-sm leading-snug text-muted-foreground mt-2">{children}</p>}
-        </NavigationMenuLink>
-      </Link>
+      <NavigationMenuLink 
+        render={
+          <Link 
+            ref={ref} 
+            href={href || "#"} 
+            className={cn("block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground", className)} 
+          />
+        }
+        {...props}
+      >
+        <div className="text-sm font-medium leading-none">{title}</div>
+        {children && <p className="line-clamp-2 text-sm leading-snug text-muted-foreground mt-2">{children}</p>}
+      </NavigationMenuLink>
     </li>
   );
 });

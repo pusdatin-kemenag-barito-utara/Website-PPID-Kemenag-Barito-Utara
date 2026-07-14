@@ -1,4 +1,4 @@
-import { pgTable, pgSchema, uuid, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgSchema, uuid, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
 
 // Deklarasi skema kustom (kemenag_ppid)
 export const ppidSchema = pgSchema("kemenag_ppid");
@@ -42,7 +42,40 @@ export const permohonanInformasi = ppidSchema.table("permohonan_informasi", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// 3. Tabel pusdatin (hanya rujukan profil untuk admin cross-schema auth)
+// 3. Tabel Profil Instansi
+export const profilInstansi = ppidSchema.table("profil_instansi", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sejarah: text("sejarah"),
+  visiMisi: text("visi_misi"),
+  strukturOrganisasiUrl: varchar("struktur_organisasi_url", { length: 500 }),
+  email: varchar("email", { length: 255 }),
+  telepon: varchar("telepon", { length: 50 }),
+  alamat: text("alamat"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// 4. Tabel Berita
+export const berita = ppidSchema.table("berita", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  judul: varchar("judul", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  konten: text("konten").notNull(),
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  isPublished: boolean("is_published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// 5. Tabel Halaman Statis
+export const halamanStatis = ppidSchema.table("halaman_statis", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  judul: varchar("judul", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  konten: text("konten").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// 6. Tabel pusdatin (hanya rujukan profil untuk admin cross-schema auth)
 export const pusdatinSchema = pgSchema("kemenag_pusdatin");
 export const profiles = pusdatinSchema.table("profiles", {
   id: uuid("id").primaryKey(),
