@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import {
   NavigationMenu,
@@ -74,8 +75,8 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <Image src="/logo-kemenag.svg" alt="Logo Kemenag" width={56} height={56} priority className="object-contain" />
           <div className="flex flex-col">
-            <span className="font-bold text-[#007144] text-lg md:text-xl tracking-wide leading-tight">KEMENTERIAN AGAMA</span>
-            <span className="text-muted-foreground text-sm tracking-wide leading-tight">KABUPATEN BARITO UTARA</span>
+            <span className="font-bold text-[#007144] text-lg md:text-xl tracking-wide leading-tight">PPID KEMENAG</span>
+            <span className="text-muted-foreground text-sm tracking-wide leading-tight">Kabupaten Barito Utara</span>
           </div>
         </div>
         
@@ -90,6 +91,7 @@ export function Navbar() {
             <span className="text-orange-500 font-medium">Adil dan</span>{" "}
             <span className="text-orange-500 font-medium">Transparan</span>
           </div>
+          <ThemeToggle />
         </div>
       </div>
 
