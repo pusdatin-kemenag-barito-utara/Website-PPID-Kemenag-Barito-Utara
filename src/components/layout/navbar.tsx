@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import {
@@ -57,8 +58,9 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-8 max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg mr-6">
-            <span className="text-primary">PPID</span> Kemenag
+          <Link href="/" className="flex items-center gap-3 font-bold text-lg mr-6">
+            <Image src="/logo-kemenag.svg" alt="Logo Kemenag" width={32} height={32} priority />
+            <span><span className="text-primary">PPID</span> Kemenag</span>
           </Link>
           
           <div className="hidden lg:flex">
@@ -154,10 +156,9 @@ const ListItem = React.forwardRef<
 >(({ className, title, children, href, ...props }, ref) => {
   return (
     <li>
-      <NavigationMenuLink asChild>
-        <Link
+      <Link href={href || "#"} legacyBehavior passHref>
+        <NavigationMenuLink
           ref={ref}
-          href={href || "#"}
           className={cn(
             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
             className
@@ -166,8 +167,8 @@ const ListItem = React.forwardRef<
         >
           <div className="text-sm font-medium leading-none">{title}</div>
           {children && <p className="line-clamp-2 text-sm leading-snug text-muted-foreground mt-2">{children}</p>}
-        </Link>
-      </NavigationMenuLink>
+        </NavigationMenuLink>
+      </Link>
     </li>
   );
 });
