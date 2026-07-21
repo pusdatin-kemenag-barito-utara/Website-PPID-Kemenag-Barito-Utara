@@ -113,8 +113,33 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+/* Accessibility Feature Rules */
+html.text-scale-large {
+  font-size: 112.5%;
+}
+
+html.text-scale-xlarge {
+  font-size: 125%;
+}
+
+html.high-contrast-mode {
+  filter: contrast(140%) saturate(120%);
+}
+
+html.high-contrast-mode body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast-mode .bg-card,
+html.high-contrast-mode .bg-background {
+  background-color: #0f0f0f !important;
+  color: #ffffff !important;
+  border-color: #f59e0b !important;
 }
 
 @layer base {

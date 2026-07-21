@@ -11,7 +11,7 @@ export function Footer() {
 
   return (
     <footer className="w-full bg-gradient-to-br from-green-50/80 via-white to-green-50/50 dark:from-green-950/20 dark:via-background dark:to-green-950/10 border-t mt-auto">
-      <div className="w-[90%] mx-auto px-4 md:px-8 py-12">
+      <div className="w-full px-4 md:px-8 lg:px-12 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Column 1: Logos and Intro */}
           <div className="flex flex-col space-y-6">
@@ -281,7 +281,7 @@ export function Footer() {
 
       {/* Bottom Bar */}
       <div className="border-t">
-        <div className="w-[90%] mx-auto px-4 md:px-8 py-4 flex flex-col md:flex-row items-center justify-center gap-4">
+        <div className="w-full px-4 md:px-8 lg:px-12 py-4 flex flex-col md:flex-row items-center justify-center gap-4">
           <p className="text-xs text-muted-foreground text-center">
             &copy; {new Date().getFullYear()} PPID Kemenag Barito Utara. Hak cipta dilindungi.
           </p>

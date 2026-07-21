@@ -4,6 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { AccessibilityWidget } from "@/components/ui/accessibility-widget";
+import { LiveSupportWidget } from "@/components/layout/live-support-widget";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -25,7 +27,7 @@ export default function RootLayout({
       <body className={`${plusJakartaSans.variable} font-sans antialiased min-h-screen bg-background text-foreground flex flex-col`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
@@ -34,6 +36,8 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <AccessibilityWidget />
+          <LiveSupportWidget />
         </ThemeProvider>
       </body>
     </html>

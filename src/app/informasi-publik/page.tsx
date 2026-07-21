@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 
 export default function InformasiPublikPage() {
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-12">
+    <div className="w-full px-4 md:px-8 lg:px-12 py-12">
       <h1 className="text-3xl font-bold mb-6">Informasi Publik</h1>
       <p className="text-muted-foreground">Daftar informasi berkala, serta merta, dan setiap saat.</p>
     </div>
