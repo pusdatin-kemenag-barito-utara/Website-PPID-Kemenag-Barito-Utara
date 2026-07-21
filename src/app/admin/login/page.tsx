@@ -20,6 +20,9 @@ export default function LoginPage() {
     setError("");
 
     try {
+      const turnstileInput = document.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
+      const turnstileToken = turnstileInput?.value || "";
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -28,6 +31,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: email.trim(),
           password,
+          turnstileToken,
         }),
       });
 

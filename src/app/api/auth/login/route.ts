@@ -39,9 +39,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Format email tidak valid." }, { status: 400 });
     }
 
-    // Optional Turnstile verification in production
-    if (!turnstileToken && process.env.NODE_ENV === "production") {
-      return NextResponse.json({ error: "Verifikasi Captcha gagal." }, { status: 400 });
+    // Turnstile verification
+    if (process.env.NODE_ENV === "production" || process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return NextResponse.json({ error: "Verifikasi Captcha belum dicentang/gagal." }, { status: 400 });
+      }
+
+      if (process.env.TURNSTILE_SECRET_KEY) {
+        const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `secret=${encodeURIComponent(process.env.TURNSTILE_SECRET_KEY)}&response=${encodeURIComponent(turnstileToken)}`,
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyData.success) {
+          return NextResponse.json({ error: "Verifikasi Captcha Cloudflare gagal disvalidasi." }, { status: 400 });
+        }
+      }
     }
 
     const supabase = await createClient();
