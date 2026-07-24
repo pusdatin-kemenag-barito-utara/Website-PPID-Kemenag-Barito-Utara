@@ -1,8 +1,59 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export default function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // === MAINTENANCE CHECK TERPUSAT (PUSDATIN) ===
+  const isAdminPath = pathname.startsWith('/admin');
+  const isApiPath = pathname.startsWith('/api');
+  const isStaticFile = pathname.includes('.');
+
+  if (!isAdminPath && !isApiPath && !isStaticFile) {
+    try {
+      const pusdatinUrl = process.env.NEXT_PUBLIC_PUSDATIN_URL || "https://pusdatin.kemenag-baritoutara.com";
+      const appId = process.env.NEXT_PUBLIC_PUSDATIN_APP_ID || "ppid_kemenag_barito_utara";
+
+      const maintenanceRes = await fetch(
+        `${pusdatinUrl}/api/public/apps/${appId}/status`,
+        {
+          next: { revalidate: 30 },
+        }
+      );
+
+      if (maintenanceRes.ok) {
+        const data = await maintenanceRes.json();
+        if (data.status === "maintenance") {
+          return new NextResponse(
+            `<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistem Sedang Pemeliharaan - PPID Kemenag Barito Utara</title>
+    <link rel="icon" href="${pusdatinUrl}/branding/kemenag.svg" type="image/svg+xml">
+    <style>
+      body { margin: 0; overflow: hidden; background-color: #f8fafc; }
+      iframe { width: 100vw; height: 100vh; border: none; }
+    </style>
+  </head>
+  <body>
+    <iframe src="${pusdatinUrl}/maintenance?app=PPID+Kemenag" title="Maintenance"></iframe>
+  </body>
+</html>`,
+            {
+              status: 503,
+              headers: {
+                "Content-Type": "text/html; charset=utf-8",
+              },
+            }
+          );
+        }
+      }
+    } catch (error) {
+      console.error("[PROXY] Failed to fetch maintenance status:", error);
+    }
+  }
 
   let hasSupabaseSession = false;
   
