@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
-import { AccessibilityWidget } from "@/components/ui/accessibility-widget";
-import { LiveSupportWidget } from "@/components/layout/live-support-widget";
+import { MainLayoutWrapper } from "@/components/layout/main-layout-wrapper";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
   variable: "--font-plus-jakarta-sans",
 });
+
+
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ppid-baritoutara.kemenag.go.id";
 
@@ -91,13 +90,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <AccessibilityWidget />
-          <LiveSupportWidget />
+          <MainLayoutWrapper>{children}</MainLayoutWrapper>
         </ThemeProvider>
       </body>
     </html>

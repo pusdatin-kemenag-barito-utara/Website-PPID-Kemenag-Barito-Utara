@@ -5,8 +5,7 @@ export async function GET() {
     {
       status: "ok",
       timestamp: new Date().toISOString(),
-      service: "ppid-kemenag",
-      version: "1.0.0"
+      service: "ppid-kemenag-barito-utara",
     },
     { status: 200 }
   );
