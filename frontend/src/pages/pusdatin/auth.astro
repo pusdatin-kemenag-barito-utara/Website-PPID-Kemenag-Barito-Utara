@@ -1,12 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro';
 import LoginForm from '../../components/react/LoginForm';
+import { getAdminUser } from '../../lib/admin-server';
 
 // If user already has valid admin session, redirect to admin dashboard
 const ADMIN_COOKIE = 'ppid_admin_token';
 const sessionToken = Astro.cookies.get(ADMIN_COOKIE)?.value;
 if (sessionToken) {
-	return Astro.redirect('/admin/dashboard');
+	const user = await getAdminUser(Astro.url.origin, Astro.request.headers.get('cookie') ?? '');
+	if (user) {
+		return Astro.redirect('/admin/dashboard');
+	}
+	// Expired/invalid cookie: delete so the login form renders cleanly
+	Astro.cookies.delete(ADMIN_COOKIE, { path: '/' });
 }
 
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAADR1O_LSp1lgc3km';

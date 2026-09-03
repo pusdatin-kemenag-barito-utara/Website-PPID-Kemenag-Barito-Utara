@@ -207,14 +207,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
 	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
-	// Comprehensive Enterprise CSP (Allowing GA4, GTM, Cloudflare Insights, Turnstile, R2, and PDF preview)
+	// Comprehensive Enterprise CSP (Allowing GA4, GTM, Cloudflare Insights, Turnstile, R2, unpkg PDF.js, and PDF preview)
 	const cspDirectives = [
 		"default-src 'self'",
-		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com https://challenges.cloudflare.com",
+		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com https://challenges.cloudflare.com https://unpkg.com",
+		"worker-src 'self' blob:",
 		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 		"font-src 'self' https://fonts.gstatic.com data:",
 		"img-src 'self' data: blob: https://ppid.kemenag-baritoutara.com https://files.kemenag-baritoutara.com https://www.google-analytics.com https://www.googletagmanager.com",
-		"connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://ppid.kemenag-baritoutara.com https://files.kemenag-baritoutara.com https://pusdatin.kemenag-baritoutara.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://static.cloudflareinsights.com https://cloudflareinsights.com https://challenges.cloudflare.com",
+		"connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://ppid.kemenag-baritoutara.com https://files.kemenag-baritoutara.com https://pusdatin.kemenag-baritoutara.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://static.cloudflareinsights.com https://cloudflareinsights.com https://challenges.cloudflare.com https://unpkg.com",
 		"frame-src 'self' data: blob: https://files.kemenag-baritoutara.com https://pusdatin.kemenag-baritoutara.com https://challenges.cloudflare.com https://www.googletagmanager.com",
 		"object-src 'self' blob: https://files.kemenag-baritoutara.com",
 		"base-uri 'self'",

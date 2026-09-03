@@ -8,6 +8,7 @@ import {
 	ZoomIn,
 	ZoomOut,
 	RotateCw,
+	FileText,
 } from 'lucide-react';
 
 export interface PdfViewerModalProps {
@@ -18,38 +19,49 @@ export interface PdfViewerModalProps {
 }
 
 /**
- * Resolves the optimal URL for loading the PDF:
- * - In Development (localhost / 127.0.0.1): Uses the local backend proxy (/api/v1/storage/...)
- * - In Production (live deploy): Uses the high-speed Cloudflare Edge CDN.
- */
-function getIframeUrl(rawUrl: string): string {
-	if (!rawUrl) return '';
-
-	// Always prefer same-origin proxy (/api/v1/storage/...) for secure, unblocked iframe preview
-	const match = rawUrl.match(/(informasi-publik|regulasi|dokumen-ppid)\/.+$/);
-	if (match) {
-		return `/api/v1/storage/${match[0]}`;
-	}
-	if (rawUrl.startsWith('/uploads/')) {
-		return `/api/v1/storage/${rawUrl.replace(/^\/uploads\//, '')}`;
-	}
-	if (rawUrl.startsWith('/api/v1/storage/')) {
-		return rawUrl;
-	}
-
-	return getCdnUrl(rawUrl);
-}
-
-/**
- * Returns the public high-speed CDN URL for direct tab opening.
+ * Returns the public high-speed CDN URL for direct Cloudflare CDN loading.
  */
 function getCdnUrl(rawUrl: string): string {
 	if (!rawUrl) return '';
+	if (rawUrl.startsWith('https://files.kemenag-baritoutara.com/')) {
+		return rawUrl;
+	}
 	const match = rawUrl.match(/(informasi-publik|regulasi|dokumen-ppid)\/.+$/);
 	if (match) {
 		return `https://files.kemenag-baritoutara.com/ppid/${match[0]}`;
 	}
+	if (rawUrl.startsWith('/api/v1/storage/')) {
+		const sub = rawUrl.replace(/^\/api\/v1\/storage\//, '');
+		return `https://files.kemenag-baritoutara.com/ppid/${sub}`;
+	}
+	if (rawUrl.startsWith('/uploads/')) {
+		const sub = rawUrl.replace(/^\/uploads\//, '');
+		return `https://files.kemenag-baritoutara.com/ppid/${sub}`;
+	}
 	return rawUrl;
+}
+
+/**
+ * Resolves the optimal URL for loading the PDF in iframe:
+ * - In Development (localhost / 127.0.0.1): Uses the local backend proxy (/api/v1/storage/...)
+ * - In Production (live deploy): Loads directly from Cloudflare Edge CDN.
+ */
+function getIframeUrl(rawUrl: string): string {
+	if (!rawUrl) return '';
+
+	// In local development (localhost / 127.0.0.1): use the local backend proxy
+	if (
+		typeof window !== 'undefined' &&
+		(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+	) {
+		const match = rawUrl.match(/(informasi-publik|regulasi|dokumen-ppid)\/.+$/);
+		if (match) return `/api/v1/storage/${match[0]}`;
+		if (rawUrl.startsWith('/uploads/')) return `/api/v1/storage/${rawUrl.replace(/^\/uploads\//, '')}`;
+		return rawUrl;
+	}
+
+	// In Production: Always load directly from high-speed Cloudflare Edge CDN
+	return getCdnUrl(rawUrl);
 }
 
 /**
@@ -216,18 +228,11 @@ export default function PdfViewerModal({
 				/Macintosh|Mac OS X|MacBook/i.test(ua) ||
 				(navigator.platform && navigator.platform.toUpperCase().indexOf('MAC') >= 0);
 
-			let isInsideSimulatorFrame = false;
-			try {
-				isInsideSimulatorFrame = window.self !== window.top;
-			} catch (e) {
-				isInsideSimulatorFrame = true;
-			}
-
 			const isMobile =
 				window.innerWidth < 768 ||
 				/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 
-			shouldUseCanvas = isAppleMac || isInsideSimulatorFrame || isMobile;
+			shouldUseCanvas = isAppleMac || isMobile;
 		}
 
 		if (shouldUseCanvas) {
@@ -252,7 +257,7 @@ export default function PdfViewerModal({
 				const pdfjs = await import('pdfjs-dist');
 				pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-				const targetPdfUrl = getIframeUrl(url);
+				const targetPdfUrl = getCdnUrl(url);
 				const loadingTask = pdfjs.getDocument({
 					url: targetPdfUrl,
 					cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
@@ -265,7 +270,10 @@ export default function PdfViewerModal({
 				setNumPages(loadedDoc.numPages);
 				setActivePage(1);
 			} catch (err) {
-				console.error('Gagal memuat dokumen PDF via PDF.js:', err);
+				console.warn('Gagal memuat via PDF.js canvas, otomatis beralih ke native iframe:', err);
+				if (active) {
+					setViewMode('iframe');
+				}
 			} finally {
 				if (active) setCanvasLoading(false);
 			}
@@ -306,6 +314,17 @@ export default function PdfViewerModal({
 					</h2>
 
 					<div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+						{/* Mode Switcher */}
+						<button
+							type="button"
+							onClick={() => setViewMode(viewMode === 'iframe' ? 'canvas' : 'iframe')}
+							className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-input bg-background hover:bg-accent text-[11px] sm:text-xs font-semibold text-foreground/80 hover:text-foreground transition-colors cursor-pointer"
+							title={viewMode === 'iframe' ? 'Ganti ke mode lembar dokumen (Canvas)' : 'Ganti ke mode penampil standar (Native)'}
+						>
+							<FileText className="w-3.5 h-3.5 text-muted-foreground" />
+							<span className="hidden md:inline">{viewMode === 'iframe' ? 'Mode Lembar' : 'Mode Standar'}</span>
+						</button>
+
 						{/* Buka di Tab Baru */}
 						<a
 							href={cdnUrl}
