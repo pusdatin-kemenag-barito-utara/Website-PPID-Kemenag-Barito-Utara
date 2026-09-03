@@ -161,25 +161,41 @@ const structuredData = {
 		<!-- 6. Schema.org JSON-LD Structured Data -->
 		<script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
 
-		<!-- Theme Initializer -->
+		<!-- Theme Initializer (Default: Light Mode) -->
 		<script is:inline>
 			(function () {
 				try {
 					var s = localStorage.getItem('theme');
-					var dark = s === 'dark' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches);
-					if (dark) document.documentElement.classList.add('dark');
+					if (s === 'dark') {
+						document.documentElement.classList.add('dark');
+					} else {
+						document.documentElement.classList.remove('dark');
+					}
 				} catch (e) {}
 			})();
 		</script>
 
-		<!-- 7. PWA Service Worker Registration -->
+		<!-- 7. PWA Service Worker Registration & Legacy Next.js Cache Cleaner -->
 		<script is:inline>
+			// Wipe any stale caches from previous Next.js deployments
+			try {
+				if ('caches' in window) {
+					caches.keys().then(function (names) {
+						names.forEach(function (name) {
+							if (name.includes('next') || name.startsWith('next-')) {
+								caches.delete(name);
+							}
+						});
+					});
+				}
+			} catch (e) {}
+
 			if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
 				window.addEventListener('load', function () {
 					navigator.serviceWorker
 						.register('/sw.js', { scope: '/' })
 						.then(function (reg) {
-							// Check for service worker updates
+							reg.update();
 							reg.onupdatefound = function () {
 								var installingWorker = reg.installing;
 								if (installingWorker) {

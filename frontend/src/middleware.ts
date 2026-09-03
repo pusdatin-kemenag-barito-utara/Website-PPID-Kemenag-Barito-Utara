@@ -1,8 +1,16 @@
 import { defineMiddleware } from 'astro:middleware';
 
 // Dev/prod wiring: browser only ever talks to the Astro origin. /api/* is
-// proxied to the Go Fiber backend (same layout as nginx at production).
-const UPSTREAM = import.meta.env.API_UPSTREAM_URL ?? 'http://127.0.0.1:8080';
+// proxied to the Go Fiber backend.
+function getUpstream(): string {
+	const raw = process.env.API_UPSTREAM_URL || import.meta.env.API_UPSTREAM_URL || 'http://127.0.0.1:8080';
+	// In single-container environment, 'backend' hostname does not exist in DNS; map to 127.0.0.1
+	if (raw.includes('://backend:')) {
+		return raw.replace('://backend:', '://127.0.0.1:');
+	}
+	return raw;
+}
+
 const ADMIN_COOKIE = 'ppid_admin_token';
 
 const passThroughHeaders = [
@@ -38,7 +46,7 @@ async function checkSystemStatus(): Promise<SystemStatus> {
 		return cachedStatus;
 	}
 	try {
-		const res = await fetch(`${UPSTREAM}/api/v1/system/status`, {
+		const res = await fetch(`${getUpstream()}/api/v1/system/status`, {
 			signal: AbortSignal.timeout(3000),
 		});
 		if (res.ok) {
@@ -49,7 +57,22 @@ async function checkSystemStatus(): Promise<SystemStatus> {
 				return cachedStatus;
 			}
 		}
-	} catch {}
+	} catch {
+		// Try localhost fallback if custom upstream failed
+		try {
+			const res = await fetch('http://127.0.0.1:8080/api/v1/system/status', {
+				signal: AbortSignal.timeout(2000),
+			});
+			if (res.ok) {
+				const json = (await res.json()) as { success: boolean; data: SystemStatus };
+				if (json.success && json.data) {
+					cachedStatus = json.data;
+					lastStatusFetch = now;
+					return cachedStatus;
+				}
+			}
+		} catch {}
+	}
 	return cachedStatus ?? { is_maintenance: false, status: 'online', name: 'PPID Kemenag Barito Utara' };
 }
 
@@ -108,7 +131,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	// Proxy API calls to the Go backend.
 	if (url.pathname.startsWith('/api/')) {
-		const upstreamUrl = new URL(url.pathname + url.search, UPSTREAM);
+		const upstreamTarget = getUpstream();
+		const upstreamUrl = new URL(url.pathname + url.search, upstreamTarget);
 
 		const headers = new Headers();
 		for (const name of passThroughHeaders) {
@@ -128,7 +152,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		}
 
 		try {
-			const upstreamRes = await fetch(upstreamUrl, init);
+			let upstreamRes: Response;
+			try {
+				upstreamRes = await fetch(upstreamUrl, init);
+			} catch (primaryErr) {
+				// If custom upstream failed and it wasn't 127.0.0.1, fallback to local backend port 8080
+				if (!upstreamUrl.origin.includes('127.0.0.1')) {
+					const fallbackUrl = new URL(url.pathname + url.search, 'http://127.0.0.1:8080');
+					upstreamRes = await fetch(fallbackUrl, init);
+				} else {
+					throw primaryErr;
+				}
+			}
 
 			const responseHeaders = new Headers(upstreamRes.headers);
 			responseHeaders.delete('content-length');
@@ -172,7 +207,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
 	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
-	// Comprehensive Enterprise CSP (Allowing GA4, GTM, Cloudflare Insights, Turnstile, R2)
+	// Comprehensive Enterprise CSP (Allowing GA4, GTM, Cloudflare Insights, Turnstile, R2, and PDF preview)
 	const cspDirectives = [
 		"default-src 'self'",
 		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com https://challenges.cloudflare.com",
@@ -180,8 +215,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		"font-src 'self' https://fonts.gstatic.com data:",
 		"img-src 'self' data: blob: https://ppid.kemenag-baritoutara.com https://files.kemenag-baritoutara.com https://www.google-analytics.com https://www.googletagmanager.com",
 		"connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://ppid.kemenag-baritoutara.com https://files.kemenag-baritoutara.com https://pusdatin.kemenag-baritoutara.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://static.cloudflareinsights.com https://cloudflareinsights.com https://challenges.cloudflare.com",
-		"frame-src 'self' https://pusdatin.kemenag-baritoutara.com https://challenges.cloudflare.com https://www.googletagmanager.com",
-		"object-src 'none'",
+		"frame-src 'self' data: blob: https://files.kemenag-baritoutara.com https://pusdatin.kemenag-baritoutara.com https://challenges.cloudflare.com https://www.googletagmanager.com",
+		"object-src 'self' blob: https://files.kemenag-baritoutara.com",
 		"base-uri 'self'",
 		"form-action 'self'",
 	];

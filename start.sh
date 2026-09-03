@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Force internal container communication
+export API_UPSTREAM_URL="http://127.0.0.1:8080"
+export BACKEND_PORT="8080"
+
 echo "===================================================="
 echo "🚀 Starting PPID Kemenag Barito Utara Services"
 echo "===================================================="

@@ -10,11 +10,7 @@ function readStored(): "light" | "dark" {
   } catch {
     /* ignore */
   }
-  try {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-  } catch {
-    return "light"
-  }
+  return "light"
 }
 
 export function useTheme() {

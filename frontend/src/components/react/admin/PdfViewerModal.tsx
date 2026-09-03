@@ -25,29 +25,19 @@ export interface PdfViewerModalProps {
 function getIframeUrl(rawUrl: string): string {
 	if (!rawUrl) return '';
 
-	const cdnUrl = getCdnUrl(rawUrl);
-
-	const isLocal =
-		typeof window !== 'undefined' &&
-		(window.location.hostname === 'localhost' ||
-			window.location.hostname === '127.0.0.1' ||
-			window.location.hostname.startsWith('192.168.') ||
-			window.location.hostname.endsWith('.local'));
-
-	if (isLocal) {
-		const match = rawUrl.match(/(informasi-publik|regulasi|dokumen-ppid)\/.+$/);
-		if (match) {
-			return `/api/v1/storage/${match[0]}`;
-		}
-		if (rawUrl.startsWith('/uploads/')) {
-			return `/api/v1/storage/${rawUrl.replace(/^\/uploads\//, '')}`;
-		}
-		if (rawUrl.startsWith('/api/v1/storage/')) {
-			return rawUrl;
-		}
+	// Always prefer same-origin proxy (/api/v1/storage/...) for secure, unblocked iframe preview
+	const match = rawUrl.match(/(informasi-publik|regulasi|dokumen-ppid)\/.+$/);
+	if (match) {
+		return `/api/v1/storage/${match[0]}`;
+	}
+	if (rawUrl.startsWith('/uploads/')) {
+		return `/api/v1/storage/${rawUrl.replace(/^\/uploads\//, '')}`;
+	}
+	if (rawUrl.startsWith('/api/v1/storage/')) {
+		return rawUrl;
 	}
 
-	return cdnUrl;
+	return getCdnUrl(rawUrl);
 }
 
 /**
