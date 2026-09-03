@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import InfografisPublicList from '../../components/react/InfografisPublicList';
+import { dataInformasiInfografis as fallbackInfografis } from '../../data/data-informasi';
+
+let infografisList: any[] = fallbackInfografis.map((it) => ({
+	id: it.id,
+	judul: it.judul,
+	kategori: it.kategori,
+	tanggal: it.tanggal,
+	deskripsi: it.deskripsi,
+	image_url: it.imageUrl || '',
+	is_aktif: true,
+}));
+
+try {
+	const apiUrl =
+		(import.meta.env.API_UPSTREAM_URL || 'http://127.0.0.1:8080') +
+		'/api/v1/data-informasi/infografis';
+	const res = await fetch(apiUrl);
+	if (res.ok) {
+		const json = await res.json();
+		if (json?.data?.items?.length) {
+			infografisList = json.data.items;
+		}
+	}
+} catch (e) {
+	// Fallback to static data if backend offline
+}
+---
+
+<Base
+	title="Infografis Keagamaan"
+	description="Sajian grafik dan data visualisasi seputar layanan publik dan keagamaan di Kabupaten Barito Utara."
+>
+	<div class="w-full px-4 md:px-8 lg:px-12 py-10 space-y-10">
+		<Hero
+			icon="pie-chart"
+			badge="Sajian Data Visual"
+			title="Infografis Keagamaan"
+			subtitle="Sajian grafik dan data visualisasi seputar layanan publik dan keagamaan di Kabupaten Barito Utara."
+		/>
+
+		<section>
+			<InfografisPublicList client:load initialItems={infografisList} />
+		</section>
+	</div>
+</Base>

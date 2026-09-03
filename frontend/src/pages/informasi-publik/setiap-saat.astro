@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import InformasiPublikSection from '../../components/react/InformasiPublikSection';
+---
+
+<Base title="Tersedia Setiap Saat">
+	<InformasiPublikSection
+		kategori="SETIAP_SAAT"
+		badge="Tersedia Setiap Saat"
+		title="Informasi Tersedia Setiap Saat"
+		subtitle="Daftar informasi publik yang dapat diakses dan diperoleh pemohon kapan saja sesuai kebutuhan."
+		listTitle="Daftar Berkas Tersedia Setiap Saat"
+		emptyState="Belum ada dokumen setiap saat yang ditemukan."
+		placeholder="Cari dokumen setiap saat..."
+		buttonText="Unduh Berkas"
+		theme="blue"
+		client:load
+	/>
+</Base>

@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import PermohonanForm from '../../components/react/PermohonanForm';
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAADR1O_LSp1lgc3km';
+---
+
+<Base
+	title="Permohonan Informasi Publik"
+	description="Formulir resmi pengajuan permohonan informasi publik secara online pada PPID Kantor Kementerian Agama Kabupaten Barito Utara."
+>
+	<div class="w-full px-4 md:px-8 lg:px-12 py-10 space-y-10">
+		<Hero
+			icon="file-check-2"
+			badge="Layanan Informasi Publik"
+			title="Permohonan Informasi Publik"
+			subtitle="Formulir resmi pengajuan permohonan informasi publik secara online pada PPID Kemenag Barito Utara sesuai UU No. 14 Tahun 2008 & Perki No. 1 Tahun 2021."
+		/>
+
+		<PermohonanForm siteKey={siteKey} client:load />
+	</div>
+</Base>

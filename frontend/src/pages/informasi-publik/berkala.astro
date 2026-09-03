@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import InformasiPublikSection from '../../components/react/InformasiPublikSection';
+---
+
+<Base title="Informasi Berkala">
+	<InformasiPublikSection
+		kategori="BERKALA"
+		badge="Informasi Publik"
+		title="Informasi Berkala"
+		subtitle="Informasi publik yang wajib disediakan dan diumumkan secara berkala oleh Kementerian Agama Barito Utara."
+		listTitle="Daftar Berkas Informasi Berkala"
+		emptyState="Belum ada dokumen informasi berkala yang ditemukan."
+		placeholder="Cari dokumen berkala..."
+		buttonText="Unduh Berkas"
+		theme="emerald"
+		client:load
+	/>
+</Base>

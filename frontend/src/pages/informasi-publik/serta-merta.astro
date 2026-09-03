@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import InformasiPublikSection from '../../components/react/InformasiPublikSection';
+---
+
+<Base title="Informasi Serta Merta">
+	<InformasiPublikSection
+		kategori="SERTA_MERTA"
+		badge="Informasi Darurat & Mendadak"
+		title="Informasi Serta Merta"
+		subtitle="Informasi yang dapat mengancam hajat hidup orang banyak dan ketertiban umum yang diumumkan serta merta."
+		listTitle="Daftar Berkas Informasi Serta Merta"
+		emptyState="Belum ada pengumuman informasi serta merta saat ini."
+		placeholder="Cari dokumen serta merta..."
+		buttonText="Unduh Berkas"
+		theme="amber"
+		client:load
+	/>
+</Base>

@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+
+const appName = encodeURIComponent('PPID Kemenag Barito Utara');
+const pusdatinUrl = import.meta.env.PUSDATIN_URL ?? 'https://pusdatin.kemenag-baritoutara.com';
+const maintenanceIframeUrl = `${pusdatinUrl}/maintenance?app=${appName}`;
+---
+
+<Base
+	title="Sistem Sedang Pemeliharaan – PPID Kemenag Barito Utara"
+	description="Aplikasi PPID Kemenag Barito Utara saat ini sedang dalam mode perbaikan terpusat oleh PUSDATIN."
+	hideNavFooter={true}
+>
+	<div
+		style="width:100vw;height:100vh;margin:0;padding:0;overflow:hidden;background-color:#f8fafc;position:fixed;inset:0;z-index:99999;"
+	>
+		<iframe
+			src={maintenanceIframeUrl}
+			title="Sistem Sedang Pemeliharaan"
+			style="width:100%;height:100%;border:none;display:block;"
+			allow="fullscreen"
+		/>
+	</div>
+
+	<!-- Real-Time Auto-Sync Script (Without History Lock to allow Back/Forward navigation) -->
+	<script is:inline>
+		(function () {
+
+			// 2. Real-Time Auto-Sync: Auto redirect to / when Pusdatin switches to ONLINE
+			var isChecking = false;
+			function pollSystemStatus() {
+				if (isChecking) return;
+				isChecking = true;
+				fetch('/api/v1/system/status')
+					.then(function (res) {
+						return res.json();
+					})
+					.then(function (payload) {
+						if (payload && payload.success && payload.data && !payload.data.is_maintenance) {
+							window.location.replace('/');
+						}
+					})
+					.catch(function () {})
+					.finally(function () {
+						isChecking = false;
+					});
+			}
+
+			// Check status periodically every 3 seconds
+			setInterval(pollSystemStatus, 3000);
+		})();
+	</script>
+</Base>

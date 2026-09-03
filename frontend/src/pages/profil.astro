@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Icon from '../components/Icon.astro';
+import { profilData } from '../data/profil';
+
+const quick = [
+	{ href: '/profil/pejabat', label: 'Profil Pejabat' },
+	{ href: '/profil/visi-misi', label: 'Visi, Misi & Motto' },
+	{ href: '/profil/tugas-fungsi', label: 'Tugas & Fungsi' },
+	{ href: '/profil/struktur', label: 'Struktur Organisasi' },
+];
+---
+
+<Base
+	title="Profil PPID"
+	description="Profil dan sejarah PPID Kantor Kementerian Agama Kabupaten Barito Utara."
+>
+	<div class="w-full px-4 md:px-8 lg:px-12 py-10 space-y-10">
+		<Hero
+			icon="user-check"
+			badge="Profil PPID"
+			title="Profil & Sejarah PPID"
+			subtitle="Gambaran umum dan landasan pembentukan PPID Kantor Kementerian Agama Kabupaten Barito Utara."
+		/>
+
+		<section class="space-y-6">
+			<div
+				class="p-6 md:p-10 rounded-2xl bg-card border border-border/60 shadow-xs leading-relaxed text-base md:text-lg text-foreground space-y-6"
+			>
+				<h2 class="text-2xl font-extrabold tracking-tight text-[#007144]">
+					Sejarah & Latar Belakang PPID
+				</h2>
+				<p class="whitespace-pre-line text-muted-foreground leading-relaxed">
+					{profilData.sejarah}
+				</p>
+			</div>
+
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pt-4">
+				{
+					quick.map((q) => (
+						<a
+							href={q.href}
+							class="p-5 rounded-2xl bg-card border border-border/60 hover:border-[#007144]/40 hover:bg-emerald-500/5 transition-all group flex items-center justify-between"
+						>
+							<span class="font-bold text-sm text-foreground group-hover:text-[#007144]">
+								{q.label}
+							</span>
+							<Icon
+								name="arrow-right"
+								class="w-4 h-4 text-muted-foreground group-hover:text-[#007144] transition-transform group-hover:translate-x-1"
+							/>
+						</a>
+					))
+				}
+			</div>
+		</section>
+	</div>
+</Base>

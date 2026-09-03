@@ -1,0 +1,51 @@
+{
+  "name": "PPID Kementerian Agama Kabupaten Barito Utara",
+  "short_name": "PPID Kemenag Barut",
+  "description": "Portal Pelayanan Informasi Publik Resmi PPID Kantor Kementerian Agama Kabupaten Barito Utara.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#007144",
+  "lang": "id",
+  "dir": "ltr",
+  "categories": ["government", "productivity", "news"],
+  "icons": [
+    {
+      "src": "/logo-kemenag.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/hapakat.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Permohonan Informasi",
+      "short_name": "Permohonan",
+      "description": "Ajukan permohonan informasi publik online",
+      "url": "/layanan-informasi",
+      "icons": [{ "src": "/logo-kemenag.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Informasi Berkala",
+      "short_name": "Katalog",
+      "description": "Katalog dokumen informasi berkala",
+      "url": "/informasi-publik/berkala",
+      "icons": [{ "src": "/logo-kemenag.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Regulasi",
+      "short_name": "Regulasi",
+      "description": "Daftar UU, PP, PMA, dan SK PPID",
+      "url": "/regulasi",
+      "icons": [{ "src": "/logo-kemenag.svg", "sizes": "any" }]
+    }
+  ]
+}

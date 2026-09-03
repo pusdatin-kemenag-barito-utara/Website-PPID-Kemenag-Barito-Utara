@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import SopList from '../../components/react/SopList';
+import { layananInfoData } from '../../data/layanan-info';
+
+let sopItems = layananInfoData.sopList;
+
+try {
+	const res = await fetch('http://127.0.0.1:8080/api/v1/sop');
+	if (res.ok) {
+		const json = await res.json();
+		if (json?.data?.items?.length) {
+			sopItems = json.data.items.map((it: any) => ({
+				id: it.id,
+				judul: it.judul,
+				noSop: it.no_sop || it.noSop,
+				kategori: it.kategori,
+				tglTerbit: it.tgl_terbit || it.tglTerbit,
+				fileSize: it.ukuran || it.fileSize,
+				fileUrl: it.file_url || it.fileUrl,
+			}));
+		}
+	}
+} catch (e) {
+	// Fallback to static
+}
+---
+
+<Base
+	title="SOP Layanan Informasi PPID"
+	description="Standard Operating Procedure (SOP) resmi pengelolaan dan pelayanan informasi publik Kemenag Barito Utara."
+>
+	<div class="w-full px-4 md:px-8 lg:px-12 py-10 space-y-10">
+		<Hero
+			icon="file-check"
+			badge="Standard Operating Procedure"
+			title="SOP Layanan Informasi PPID"
+			subtitle="Standard Operating Procedure (SOP) resmi pengelolaan dan pelayanan informasi publik Kemenag Barito Utara."
+		/>
+
+		<SopList sopList={sopItems} client:load />
+	</div>
+</Base>

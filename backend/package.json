@@ -1,0 +1,7 @@
+{
+  "name": "ppid-backend",
+  "private": true,
+  "scripts": {
+    "dev": "go tool air"
+  }
+}

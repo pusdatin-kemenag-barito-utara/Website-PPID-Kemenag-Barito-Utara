@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ppid-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ppid_kemenag}
+      POSTGRES_USER: ${POSTGRES_USER:-ppid}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ppid}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ppid_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ppid} -d ${POSTGRES_DB:-ppid_kemenag}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ppid-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ppid-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    environment:
+      PORT: "8080"
+      APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgres://ppid:ppid@postgres:5432/ppid_kemenag?sslmode=disable}
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - ppid-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ppid-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    env_file:
+      - .env.local
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      NODE_ENV: production
+      API_UPSTREAM_URL: "http://backend:8080"
+    ports:
+      - "3000:3000"
+    networks:
+      - ppid-network
+
+networks:
+  ppid-network:
+    driver: bridge
+
+volumes:
+  ppid_pgdata:

@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import { Home, ArrowLeft, ShieldAlert } from 'lucide-react';
+---
+
+<Base
+	title="404 – Halaman Tidak Ditemukan"
+	description="Halaman yang Anda cari tidak ditemukan atau akses tidak diizinkan di portal PPID Kementerian Agama Kabupaten Barito Utara."
+	hideNavFooter={true}
+>
+	<div class="min-h-screen w-full flex flex-col justify-between items-center bg-background px-4 py-8 md:py-12 relative overflow-hidden selection:bg-emerald-500/20 selection:text-[#007144]">
+		<!-- Ambient Glow -->
+		<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(0,180,100,0.08),transparent_60%)] pointer-events-none"></div>
+		<div class="absolute -bottom-32 -left-32 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+		<div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+		<!-- Top Minimal Branding -->
+		<div class="w-full max-w-4xl flex items-center justify-between z-10">
+			<a href="/" class="inline-flex items-center gap-2.5 group">
+				<img src="/logo-kemenag.svg" alt="Logo Kemenag" width="36" height="36" class="object-contain" />
+				<div class="text-left">
+					<div class="text-xs font-black tracking-tight text-foreground group-hover:text-[#007144] transition-colors">
+						PPID KEMENAG
+					</div>
+					<div class="text-[10px] text-muted-foreground font-medium">Kabupaten Barito Utara</div>
+				</div>
+			</a>
+			<a
+				href="/"
+				class="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-[#007144] transition-colors"
+			>
+				<Home className="w-3.5 h-3.5" />
+				<span>Beranda</span>
+			</a>
+		</div>
+
+		<!-- Center 404 Error Content -->
+		<div class="max-w-md w-full text-center space-y-6 my-auto py-8 z-10">
+			<!-- Visual Icon -->
+			<div class="relative mx-auto w-24 h-24 flex items-center justify-center">
+				<div class="absolute inset-0 bg-red-500/15 rounded-3xl blur-xl animate-pulse"></div>
+				<div class="relative w-20 h-20 rounded-2xl bg-card border border-border shadow-lg flex items-center justify-center text-red-600 dark:text-red-500">
+					<ShieldAlert className="w-10 h-10" />
+				</div>
+			</div>
+
+			<!-- Heading & Description -->
+			<div class="space-y-2">
+				<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wider">
+					Error 404 • Halaman Tidak Ditemukan
+				</div>
+				<h1 class="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+					Akses Tidak Ditemukan
+				</h1>
+				<p class="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+					Tautan yang Anda tuju salah, tidak terdaftar, atau Anda tidak memiliki otorisasi untuk mengakses rute ini.
+				</p>
+			</div>
+
+			<!-- Action Buttons -->
+			<div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+				<a
+					href="/"
+					class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#007144] px-6 py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#005935] shadow-xs transition-all active:scale-[0.98]"
+				>
+					<Home className="w-4 h-4" />
+					<span>Kembali ke Beranda</span>
+				</a>
+				<button
+					type="button"
+					onclick="window.history.back()"
+					class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-xs sm:text-sm font-bold text-foreground hover:bg-accent transition-all active:scale-[0.98] cursor-pointer"
+				>
+					<ArrowLeft className="w-4 h-4" />
+					<span>Halaman Sebelumnya</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Bottom Minimal Copyright -->
+		<div class="w-full text-center text-xs text-muted-foreground z-10">
+			&copy; {new Date().getFullYear()} PPID Kantor Kementerian Agama Kabupaten Barito Utara
+		</div>
+	</div>
+</Base>

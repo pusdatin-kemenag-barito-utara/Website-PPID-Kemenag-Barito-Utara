@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Icon from '../components/Icon.astro';
+import { dataInformasiStatistik as fallbackStatistik } from '../data/data-informasi';
+
+let dataInformasiStatistik = fallbackStatistik;
+try {
+	const apiUrl = (import.meta.env.API_UPSTREAM_URL || 'http://127.0.0.1:8080') + '/api/v1/data-informasi/statistik';
+	const res = await fetch(apiUrl);
+	if (res.ok) {
+		const json = await res.json();
+		if (json?.data?.items?.length) {
+			dataInformasiStatistik = json.data.items;
+		}
+	}
+} catch (e) {
+	// Fallback to static data if backend is offline
+}
+---
+
+<Base
+	title="Dashboard Data Informasi"
+	description="Statistik terpadu dan indikator capaian sektor keagamaan & layanan publik Kementerian Agama Kabupaten Barito Utara."
+>
+	<div class="w-full px-4 md:px-8 lg:px-12 py-10 space-y-12">
+		<Hero
+			icon="bar-chart-3"
+			badge="Visualisasi & Statistik"
+			title="Dashboard Data Informasi"
+			subtitle="Statistik terpadu dan indikator capaian sektor keagamaan & layanan publik Kementerian Agama Kabupaten Barito Utara."
+		/>
+
+		<section class="space-y-6">
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="p-2.5 rounded-xl bg-emerald-500/10 text-[#007144]">
+						<Icon name="layers" class="w-6 h-6" />
+					</div>
+					<div>
+						<h2 class="text-2xl font-extrabold tracking-tight text-foreground">
+							Indikator Data Utama
+						</h2>
+						<p class="text-xs text-muted-foreground mt-0.5">
+							Dikelola dan diperbarui secara dinamis via Panel Admin
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+				{
+					dataInformasiStatistik.map((st) => (
+						<div
+							class="p-6 rounded-3xl bg-card border border-border/60 shadow-xs space-y-4 hover:border-[#007144]/40 transition-all flex flex-col justify-between"
+						>
+							<div>
+								<span
+									class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-[#007144] mb-3"
+								>
+									{st.kategori}
+								</span>
+								<h3
+									class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+								>
+									{st.label}
+								</h3>
+								<div class="flex items-baseline gap-2 mt-2">
+									<span class="text-4xl font-extrabold tracking-tight text-[#007144]">
+										{st.nilai}
+									</span>
+									<span class="text-xs font-bold text-muted-foreground">
+										{st.satuan}
+									</span>
+								</div>
+							</div>
+							<p
+								class="text-xs text-muted-foreground leading-relaxed pt-2 border-t border-border/40 mt-3"
+							>
+								{st.deskripsi}
+							</p>
+						</div>
+					))
+				}
+			</div>
+		</section>
+
+		<section
+			class="p-8 rounded-3xl bg-emerald-500/5 border border-emerald-500/20 flex flex-col md:flex-row items-center justify-between gap-6"
+		>
+			<div class="space-y-2 text-center md:text-left">
+				<h3 class="text-xl font-extrabold text-foreground">Lihat Sajian Infografis Keagamaan</h3>
+				<p class="text-sm text-muted-foreground">
+					Temukan penyajian data visual dan sajian gambar infografis menarik seputar keagamaan.
+				</p>
+			</div>
+			<a
+				href="/data-informasi/infografis"
+				class="inline-flex items-center gap-2 bg-[#007144] text-white px-6 py-3 rounded-2xl text-xs font-bold hover:bg-[#005935] shadow-xs active:scale-[0.98] transition-all shrink-0"
+			>
+				<Icon name="pie-chart" class="w-4 h-4" />
+				<span>Buka Infografis</span>
+			</a>
+		</section>
+	</div>
+</Base>

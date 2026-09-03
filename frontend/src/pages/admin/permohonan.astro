@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminApp from '../../components/react/AdminApp';
+import { getAdminUser } from '../../lib/admin-server';
+
+const user = await getAdminUser(Astro.url.origin, Astro.request.headers.get('cookie') ?? '');
+if (!user) return Astro.redirect('/404');
+---
+
+<Base
+	title="Permohonan Layanan – Admin PPID"
+	description="Tinjau, proses, dan perbarui status permohonan informasi publik masyarakat."
+>
+	<AdminApp page="permohonan" userEmail={user.email} userFullName={user.full_name} client:load />
+</Base>

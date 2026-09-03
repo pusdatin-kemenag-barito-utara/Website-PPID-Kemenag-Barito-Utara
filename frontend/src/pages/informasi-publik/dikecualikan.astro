@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import InformasiPublikSection from '../../components/react/InformasiPublikSection';
+---
+
+<Base title="Informasi Dikecualikan">
+	<InformasiPublikSection
+		kategori="DIKECUALIKAN"
+		badge="Informasi Dikecualikan"
+		title="Informasi Dikecualikan"
+		subtitle="Daftar penetapan keputusan informasi yang bersifat rahasia dan dikecualikan berdasarkan pengujian konsekuensi UU KIP."
+		listTitle="Daftar Berkas & SK Penetapan Dikecualikan"
+		emptyState="Belum ada dokumen penetapan informasi dikecualikan yang ditemukan."
+		placeholder="Cari dokumen dikecualikan..."
+		buttonText="Unduh SK Penetapan"
+		theme="red"
+		warning="Dokumen yang tercantum dalam daftar ini adalah dokumen yang telah melalui uji konsekuensi (*consequence test*) sesuai Pasal 17 UU No. 14 Tahun 2008 dan tidak dapat dipublikasikan secara umum demi kerahasiaan negara / rahasia pribadi."
+		client:load
+	/>
+</Base>

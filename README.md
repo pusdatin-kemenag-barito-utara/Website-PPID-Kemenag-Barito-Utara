@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PPID Kemenag Barito Utara
 
-## Getting Started
+Situs layanan informasi publik Kemenag Barito Utara. Monorepo dengan arsitektur:
 
-First, run the development server:
+- **Frontend** — [Astro](https://astro.build) 7 + React islands (`frontend/`)
+- **Backend** — API REST [Go Fiber](https://docs.gofiber.io) v3 (`backend/`)
+- **Database** — PostgreSQL (via `docker-compose.yml`)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+> Catatan migrasi: aplikasi ini telah dipindahkan dari monolit Next.js (App Router) ke
+> Astro + React untuk FE dan Go Fiber untuk BE. Seluruh kode/build Next.js lama sudah
+> dihapus dari repositori.
+
+## Struktur
+
+```
+├── backend/               # API Go Fiber (port 8080)
+│   ├── cmd/ppid-api/      # entry point
+│   ├── docs/MIGRATION_MAP.md  # dokumentasi pemetaan migrasi (referensi historis)
+│   └── internal/          # handler, service, repository, model, middleware
+├── frontend/              # UI Astro 7 + React (port 4321)
+│   └── src/
+│       ├── pages/         # rute Astro
+│       ├── components/    # komponen Astro & React (islands)
+│   └── ...
+├── dev.ps1                # orchestrator dev (backend + frontend sekaligus)
+├── dev-stop.ps1           # menghentikan dev stack
+└── docker-compose.yml     # PostgreSQL lokal
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Menjalankan Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Prasyarat: Go 1.26+, Node.js >= 22.12, dan PostgreSQL (atau `docker compose up -d`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+# jalankan backend (Go Fiber) + frontend (Astro) bersamaan
+.\dev.ps1
 
-## Learn More
+# cek health backend
+Invoke-RestMethod http://localhost:8080/api/v1/health
 
-To learn more about Next.js, take a look at the following resources:
+# frontend dibuka di
+# http://localhost:4321
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# stop stack
+.\dev-stop.ps1
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Variabel lingkungan dimuat dari `.env.local` di root (lihat `backend/.env.example`
+untuk daftar variabel yang didukung). File `.env.local` berisi secret dan tidak
+di-commit (di-ignore oleh `.gitignore`).
 
-## Deploy on Vercel
+## Menjalankan secara terpisah
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```powershell
+# Backend saja
+cd backend; go run ./cmd/ppid-api
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Frontend saja
+cd frontend; npm install; npm run dev
+```
+
+## Build Produksi
+
+```powershell
+# Backend
+cd backend; go build -o bin/ppid-api ./cmd/ppid-api
+
+# Frontend
+cd frontend; npm run build
+```
+
+## Dokumentasi
+
+- Konfigurasi backend: `backend/.env.example`
+- Panduan pengembangan frontend: `frontend/AGENTS.md`
+- Pemetaan migrasi & daftar rute: `backend/docs/MIGRATION_MAP.md`

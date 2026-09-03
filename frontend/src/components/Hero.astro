@@ -1,0 +1,40 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+	badge: string;
+	title: string;
+	subtitle: string;
+	icon?: string;
+	variant?: 'emerald' | 'amber';
+}
+
+const {
+	badge,
+	title,
+	subtitle,
+	icon = 'target',
+	variant = 'emerald',
+} = Astro.props;
+
+const gradient =
+	variant === 'amber'
+		? 'from-amber-950 via-amber-800 to-emerald-950'
+		: 'from-emerald-950 via-[#007144] to-emerald-900';
+const badgeText = variant === 'amber' ? 'text-amber-200' : 'text-emerald-200';
+const subText = variant === 'amber' ? 'text-amber-100/90' : 'text-emerald-100/90';
+---
+
+<section
+	class={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${gradient} text-white p-8 md:p-12 shadow-xl`}
+>
+	<div class="relative z-10 max-w-3xl space-y-4">
+		<div
+			class={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 ${badgeText} text-xs font-bold uppercase tracking-wider backdrop-blur-md`}
+		>
+			<Icon name={icon} class="w-4 h-4" /> {badge}
+		</div>
+		<h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">{title}</h1>
+		<p class={`${subText} text-sm md:text-base leading-relaxed`}>{subtitle}</p>
+	</div>
+</section>

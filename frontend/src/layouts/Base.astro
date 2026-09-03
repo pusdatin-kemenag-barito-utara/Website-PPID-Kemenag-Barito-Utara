@@ -1,0 +1,374 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/layout/navbar';
+import Footer from '../components/layout/footer';
+import AccessibilityWidget from '../components/ui/accessibility-widget';
+import LiveSupportWidget from '../components/layout/live-support-widget';
+import ScrollToTop from '../components/ui/ScrollToTop';
+
+interface Props {
+	title?: string;
+	description?: string;
+	hideNavFooter?: boolean;
+	exactTitle?: boolean;
+}
+
+const defaultTitle = 'PPID Kemenag Kabupaten Barito Utara - Portal Pelayanan Informasi Publik';
+const {
+	title = defaultTitle,
+	description = 'Portal Pejabat Pengelola Informasi dan Dokumentasi (PPID) Kantor Kementerian Agama Kabupaten Barito Utara. Menyediakan permohonan informasi publik online, daftar dokumen berkala, regulasi, dan laporan kinerja.',
+	hideNavFooter = false,
+	exactTitle = false,
+} = Astro.props;
+
+const siteTitle = exactTitle ? title : (title === defaultTitle ? title : `${title} | PPID Kemenag Barito Utara`);
+const currentPath = Astro.url.pathname;
+const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'https://ppid.kemenag-baritoutara.com';
+const canonicalUrl = new URL(currentPath, siteUrl).toString();
+const ogImageUrl = `${siteUrl}/hapakat.png`;
+const logoUrl = `${siteUrl}/logo-kemenag.svg`;
+const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN ?? '';
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-C6T6QLCCVB';
+const gtagId = import.meta.env.PUBLIC_GTAG_ID ?? 'GT-TB7R87XG';
+const gtmId = import.meta.env.PUBLIC_GTM_ID ?? '';
+
+const shouldHideWidgets =
+	hideNavFooter ||
+	currentPath.startsWith('/admin') ||
+	currentPath.startsWith('/pusdatin') ||
+	currentPath === '/404' ||
+	currentPath.startsWith('/404');
+
+const structuredData = {
+	'@context': 'https://schema.org',
+	'@graph': [
+		{
+			'@type': 'GovernmentOffice',
+			'@id': `${siteUrl}/#organization`,
+			name: 'PPID Kantor Kementerian Agama Kabupaten Barito Utara',
+			alternateName: 'PPID Kemenag Barito Utara',
+			url: siteUrl,
+			logo: {
+				'@type': 'ImageObject',
+				url: logoUrl,
+				caption: 'Logo Kementerian Agama Republik Indonesia',
+			},
+			image: ogImageUrl,
+			description: description,
+			address: {
+				'@type': 'PostalAddress',
+				streetAddress: 'Jl. A. Yani No. 85, Lanjas, Muara Teweh',
+				addressLocality: 'Barito Utara',
+				addressRegion: 'Kalimantan Tengah',
+				postalCode: '73814',
+				addressCountry: 'ID',
+			},
+			contactPoint: {
+				'@type': 'ContactPoint',
+				telephone: '+62-538-21045',
+				contactType: 'customer support',
+				availableLanguage: ['Indonesian'],
+			},
+		},
+		{
+			'@type': 'WebSite',
+			'@id': `${siteUrl}/#website`,
+			url: siteUrl,
+			name: 'Portal PPID Kemenag Barito Utara',
+			description: description,
+			publisher: {
+				'@id': `${siteUrl}/#organization`,
+			},
+			inLanguage: 'id-ID',
+		},
+	],
+};
+---
+
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{siteTitle}</title>
+		<meta name="description" content={description} />
+		<meta
+			name="keywords"
+			content="PPID, PPID Kemenag, Kemenag Barito Utara, Kementerian Agama Barito Utara, Layanan Informasi Publik, Permohonan Informasi Online, Muara Teweh, Kalteng, Regulasi PPID, Informasi Berkala, Keterbukaan Informasi Publik, UU KIP"
+		/>
+		<meta name="author" content="PPID Kantor Kementerian Agama Kabupaten Barito Utara" />
+		<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+		<link rel="canonical" href={canonicalUrl} />
+
+		<!-- 1. Resource Hints & Priority Hints -->
+		<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+		<link rel="preconnect" href="https://www.google-analytics.com" crossorigin />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="preconnect" href="https://static.cloudflareinsights.com" crossorigin />
+		<link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin />
+		<link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+		<link rel="dns-prefetch" href="https://www.google-analytics.com" />
+		<link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+		<link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+		<link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
+		<link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+		<link rel="preload" href="/logo-kemenag.svg" as="image" type="image/svg+xml" fetchpriority="high" />
+
+		<!-- 2. Typography: Google Font API Plus Jakarta Sans -->
+		<link
+			href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+			rel="stylesheet"
+		/>
+
+		<!-- 3. PWA & Mobile Web Capabilities -->
+		<link rel="manifest" href="/site.webmanifest" />
+		<link rel="icon" type="image/svg+xml" href="/logo-kemenag.svg" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" href="/logo-kemenag.svg" />
+		<meta name="application-name" content="PPID Kemenag Barut" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="PPID Barut" />
+		<meta name="format-detection" content="telephone=no" />
+		<meta name="color-scheme" content="light dark" />
+		<meta name="theme-color" content="#007144" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#022c1b" media="(prefers-color-scheme: dark)" />
+
+		<!-- 4. Open Graph Metadata (Facebook / WhatsApp / LinkedIn / Slack) -->
+		<meta property="og:site_name" content="PPID Kemenag Barito Utara" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:title" content={siteTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:locale" content="id_ID" />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:image:secure_url" content={ogImageUrl} />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="PPID Kantor Kementerian Agama Kabupaten Barito Utara" />
+
+		<!-- 5. Twitter Card Metadata -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={siteTitle} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
+		<meta name="twitter:image:alt" content="PPID Kantor Kementerian Agama Kabupaten Barito Utara" />
+
+		<!-- 6. Schema.org JSON-LD Structured Data -->
+		<script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+
+		<!-- Theme Initializer -->
+		<script is:inline>
+			(function () {
+				try {
+					var s = localStorage.getItem('theme');
+					var dark = s === 'dark' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches);
+					if (dark) document.documentElement.classList.add('dark');
+				} catch (e) {}
+			})();
+		</script>
+
+		<!-- 7. PWA Service Worker Registration -->
+		<script is:inline>
+			if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+				window.addEventListener('load', function () {
+					navigator.serviceWorker
+						.register('/sw.js', { scope: '/' })
+						.then(function (reg) {
+							// Check for service worker updates
+							reg.onupdatefound = function () {
+								var installingWorker = reg.installing;
+								if (installingWorker) {
+									installingWorker.onstatechange = function () {
+										if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+											console.info('[PWA] Konten baru tersedia; silakan refresh.');
+										}
+									};
+								}
+							};
+						})
+						.catch(function (err) {
+							console.warn('[PWA] SW registration failed:', err);
+						});
+				});
+			}
+		</script>
+
+		<!-- 8. Cloudflare Browser Insights & Real User Monitoring (RUM) -->
+		{cfBeaconToken && (
+			<script
+				defer
+				src="https://static.cloudflareinsights.com/beacon.min.js"
+				data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
+			/>
+		)}
+
+		<!-- Google tag (gtag.js) & Enterprise Google Analytics 4 -->
+		{gaMeasurementId && (
+			<>
+				<script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+				<script is:inline define:vars={{ gaMeasurementId, gtagId }}>
+					window.dataLayer = window.dataLayer || [];
+					function gtag(){dataLayer.push(arguments);}
+					window.gtag = gtag;
+					gtag('js', new Date());
+					gtag('config', gaMeasurementId, {
+						send_page_view: true,
+						cookie_flags: 'SameSite=None;Secure',
+						anonymize_ip: true,
+					});
+					if (gtagId && gtagId !== gaMeasurementId) {
+						gtag('config', gtagId);
+					}
+				</script>
+			</>
+		)}
+
+		<!-- Google Tag Manager (GTM) Container Script -->
+		{gtmId && (
+			<script is:inline define:vars={{ gtmId }}>
+				(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+				new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+				j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+				'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+				})(window,document,'script','dataLayer',gtmId);
+			</script>
+		)}
+
+		<script is:inline>
+			// Real User Monitoring (RUM) & Core Web Vitals Telemetry
+			(function () {
+				if (!('performance' in window) || !('PerformanceObserver' in window)) return;
+				try {
+					// Observe Largest Contentful Paint (LCP)
+					var lcpObserver = new PerformanceObserver(function (entryList) {
+						var entries = entryList.getEntries();
+						var lastEntry = entries[entries.length - 1];
+						if (lastEntry) {
+							var lcpVal = Math.round(lastEntry.startTime);
+							window.__cf_lcp = lcpVal;
+							if (typeof window.gtag === 'function') {
+								window.gtag('event', 'web_vitals', {
+									event_category: 'Web Vitals',
+									event_label: 'LCP',
+									value: lcpVal,
+									non_interaction: true,
+								});
+							}
+						}
+					});
+					lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+
+					// Observe Cumulative Layout Shift (CLS)
+					var clsScore = 0;
+					var clsObserver = new PerformanceObserver(function (entryList) {
+						var entries = entryList.getEntries();
+						for (var i = 0; i < entries.length; i++) {
+							if (!entries[i].hadRecentInput) {
+								clsScore += entries[i].value;
+								window.__cf_cls = Number(clsScore.toFixed(4));
+							}
+						}
+					});
+					clsObserver.observe({ type: 'layout-shift', buffered: true });
+				} catch (e) {}
+			})();
+
+			// Enterprise Declarative Click & Interaction Tracker
+			document.addEventListener('click', function (e) {
+				var target = e.target.closest('[data-analytics-event]');
+				if (!target) return;
+				var eventName = target.getAttribute('data-analytics-event');
+				if (!eventName) return;
+				var category = target.getAttribute('data-analytics-category') || 'engagement';
+				var label = target.getAttribute('data-analytics-label') || target.innerText.trim() || target.getAttribute('title') || '';
+				var section = target.getAttribute('data-analytics-section') || '';
+				var url = target.getAttribute('href') || undefined;
+
+				var payload = {
+					event_category: category,
+					event_label: label,
+					section: section,
+					link_url: url,
+				};
+
+				if (typeof window.gtag === 'function') {
+					window.gtag('event', eventName, payload);
+				} else if (window.dataLayer) {
+					window.dataLayer.push(Object.assign({ event: eventName }, payload));
+				}
+			}, { passive: true });
+
+			// Real-Time Maintenance Notification & Graceful Navigation
+			(function () {
+				if (window.location.pathname === '/maintenance') return;
+
+				fetch('/api/v1/system/status')
+					.then(function (res) { return res.json(); })
+					.then(function (payload) {
+						if (payload && payload.success && payload.data && payload.data.is_maintenance) {
+							if (document.getElementById('maintenance-grace-banner')) return;
+
+							var banner = document.createElement('div');
+							banner.id = 'maintenance-grace-banner';
+							banner.setAttribute('style', 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999999;background:rgba(24,24,27,0.92);backdrop-filter:blur(12px);border:1px solid rgba(245,158,11,0.4);color:#ffffff;padding:8px 16px;border-radius:9999px;display:flex;align-items:center;gap:10px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);font-size:12px;font-weight:600;font-family:inherit;max-width:92vw;');
+							banner.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(245,158,11,0.2);color:#f59e0b;font-size:11px;">⚠️</span>' +
+								'<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Sistem dalam pemeliharaan. Menuju halaman perbaikan dalam <span id="maint-countdown" style="color:#f59e0b;font-weight:800;">3</span>s...</span>' +
+								'<button id="maint-go-btn" style="margin-left:4px;padding:3px 10px;background:#f59e0b;color:#000;border:none;border-radius:9999px;font-size:11px;font-weight:800;cursor:pointer;">Masuk</button>';
+							document.body.appendChild(banner);
+
+							var secondsLeft = 3;
+							var cdSpan = document.getElementById('maint-countdown');
+							var goBtn = document.getElementById('maint-go-btn');
+
+							if (goBtn) {
+								goBtn.onclick = function () {
+									window.location.href = '/maintenance';
+								};
+							}
+
+							var timer = setInterval(function () {
+								secondsLeft--;
+								if (cdSpan) cdSpan.textContent = secondsLeft;
+								if (secondsLeft <= 0) {
+									clearInterval(timer);
+									window.location.href = '/maintenance';
+								}
+							}, 1000);
+						}
+					})
+					.catch(function () {});
+			})();
+		</script>
+		<slot name="head" />
+	</head>
+	<body
+		class={
+			'min-h-screen bg-background text-foreground flex flex-col font-sans antialiased'
+		}
+	>
+		<!-- Google Tag Manager (noscript fallback) -->
+		{gtmId && (
+			<noscript>
+				<iframe
+					src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+					height="0"
+					width="0"
+					style="display:none;visibility:hidden"
+				></iframe>
+			</noscript>
+		)}
+		{!shouldHideWidgets && <Navbar currentPath={currentPath} client:load />}
+		<main class="flex-1 flex flex-col">
+			<slot />
+		</main>
+		{!shouldHideWidgets && <Footer currentPath={currentPath} client:load />}
+		{!shouldHideWidgets && <AccessibilityWidget client:load />}
+		{!shouldHideWidgets && <ScrollToTop client:load />}
+		{!shouldHideWidgets && <LiveSupportWidget client:load />}
+	</body>
+</html>

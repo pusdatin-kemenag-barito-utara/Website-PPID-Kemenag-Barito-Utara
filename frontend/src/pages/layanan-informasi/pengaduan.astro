@@ -1,0 +1,104 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import Icon from '../../components/Icon.astro';
+import PengaduanForm from '../../components/react/PengaduanForm';
+import { layananInfoData } from '../../data/layanan-info';
+
+const { email, phone, whatsapp, alamat } = layananInfoData.kontakPengaduan;
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAADR1O_LSp1lgc3km';
+---
+
+<Base
+	title="Pengaduan Masyarakat"
+	description="Kanal aspirasi resmi dan pengaduan kualitas pelayanan Kementerian Agama Kabupaten Barito Utara."
+>
+	<div class="w-[90%] mx-auto py-8 sm:py-10 space-y-8 sm:space-y-10">
+		<Hero
+			icon="message-square-warning"
+			badge="Pengaduan & Aspirasi"
+			title="Pengaduan Masyarakat"
+			subtitle="Kanal aspirasi resmi dan pengaduan kualitas pelayanan Kementerian Agama Kabupaten Barito Utara."
+			variant="emerald"
+		/>
+
+		<section class="w-full mx-auto grid gap-6 lg:gap-8 lg:grid-cols-12 items-start">
+			{/* Sidebar Kontak & Informasi Pengaduan */}
+			<div class="space-y-5 lg:col-span-4">
+				<div class="p-6 sm:p-7 rounded-3xl bg-card border border-border/70 shadow-sm space-y-6">
+					<div class="border-b border-border/50 pb-3">
+						<h3 class="font-black text-base text-foreground flex items-center gap-2">
+							<Icon name="shield-check" class="w-5 h-5 text-[#007144]" />
+							<span>Kontak Pengaduan Resmi</span>
+						</h3>
+						<p class="text-xs text-muted-foreground mt-0.5">
+							Saluran pengawasan dan aspirasi Kementerian Agama Barito Utara.
+						</p>
+					</div>
+
+					<div class="space-y-4 text-xs font-medium text-muted-foreground">
+						<div class="flex items-start gap-3 p-3 rounded-2xl bg-accent/30 border border-border/40">
+							<Icon name="mail" class="w-4 h-4 text-[#007144] shrink-0 mt-0.5" />
+							<div>
+								<span class="text-[10px] font-extrabold uppercase text-foreground block tracking-wider">
+									Email Pengaduan
+								</span>
+								<a href={`mailto:${email}`} class="text-foreground hover:text-[#007144] hover:underline font-semibold break-all">
+									{email}
+								</a>
+							</div>
+						</div>
+
+						{whatsapp && (
+							<div class="flex items-start gap-3 p-3 rounded-2xl bg-accent/30 border border-border/40">
+								<Icon name="phone" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+								<div>
+									<span class="text-[10px] font-extrabold uppercase text-foreground block tracking-wider">
+										WhatsApp Center
+									</span>
+									<span class="font-mono font-bold text-foreground">{whatsapp}</span>
+								</div>
+							</div>
+						)}
+
+						<div class="flex items-start gap-3 p-3 rounded-2xl bg-accent/30 border border-border/40">
+							<Icon name="phone" class="w-4 h-4 text-[#007144] shrink-0 mt-0.5" />
+							<div>
+								<span class="text-[10px] font-extrabold uppercase text-foreground block tracking-wider">
+									Telepon Kantor
+								</span>
+								<span class="font-mono font-bold text-foreground">{phone}</span>
+							</div>
+						</div>
+
+						<div class="flex items-start gap-3 p-3 rounded-2xl bg-accent/30 border border-border/40">
+							<Icon name="map-pin" class="w-4 h-4 text-[#007144] shrink-0 mt-0.5" />
+							<div>
+								<span class="text-[10px] font-extrabold uppercase text-foreground block tracking-wider">
+									Meja Layanan Langsung
+								</span>
+								<span class="leading-relaxed">{alamat}</span>
+							</div>
+						</div>
+					</div>
+
+					{/* Security & Confidentiality Notice */}
+					<div class="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-xs text-foreground/90 space-y-1.5">
+						<div class="font-bold text-teal-800 dark:text-teal-300 flex items-center gap-1.5">
+							<Icon name="lock" class="w-3.5 h-3.5" />
+							<span>Jaminan Kerahasiaan Identitas</span>
+						</div>
+						<p class="text-[11px] text-muted-foreground leading-relaxed">
+							Sesuai UU Pelindungan Data Pribadi (UU PDP), identitas pengadu dijaga kerahasiaannya dan tidak akan dipublikasikan ke pihak luar.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			{/* Main Form Section */}
+			<div class="lg:col-span-8">
+				<PengaduanForm siteKey={siteKey} client:load />
+			</div>
+		</section>
+	</div>
+</Base>

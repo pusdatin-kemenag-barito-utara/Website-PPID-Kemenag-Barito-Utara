@@ -1,0 +1,9 @@
+# Robots.txt for PPID Kementerian Agama Kabupaten Barito Utara
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /pusdatin/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://ppid.kemenag-baritoutara.com/sitemap.xml

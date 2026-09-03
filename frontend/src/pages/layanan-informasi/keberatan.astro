@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import KeberatanContainer from '../../components/react/KeberatanContainer';
+import { layananInfoData } from '../../data/layanan-info';
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAADR1O_LSp1lgc3km';
+---
+
+<Base
+	title="Pengajuan Keberatan Informasi Publik"
+	description="Formulir resmi pengajuan keberatan atas permohonan informasi publik, kriteria alasan sah (Pasal 35 UU KIP), serta prosedur penyelesaian sengketa informasi ke Komisi Informasi."
+>
+	<div class="w-[90%] mx-auto py-8 sm:py-10 space-y-8 sm:space-y-10">
+		<!-- Hero Section -->
+		<Hero
+			icon="alert-triangle"
+			badge="Layanan Penanganan Keberatan"
+			title="Pengajuan Keberatan Informasi Publik"
+			subtitle="Formulir resmi pengajuan keberatan kepada Atasan PPID Kemenag Barito Utara, dilengkapi penegasan kriteria alasan sah dan alur penyelesaian sengketa informasi sesuai UU No. 14 Tahun 2008."
+			variant="amber"
+		/>
+
+		<!-- Interactive Navigation Tabs & Container -->
+		<KeberatanContainer
+			alasanKeberatan={layananInfoData.alasanKeberatan}
+			prosedurSengketa={layananInfoData.prosedurSengketa}
+			siteKey={siteKey}
+			client:load
+		/>
+	</div>
+</Base>

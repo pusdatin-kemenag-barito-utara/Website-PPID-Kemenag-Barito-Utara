@@ -1,0 +1,138 @@
+---
+import Base from '../../layouts/Base.astro';
+import LoginForm from '../../components/react/LoginForm';
+
+// If user already has valid admin session, redirect to admin dashboard
+const ADMIN_COOKIE = 'ppid_admin_token';
+const sessionToken = Astro.cookies.get(ADMIN_COOKIE)?.value;
+if (sessionToken) {
+	return Astro.redirect('/admin/dashboard');
+}
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAADR1O_LSp1lgc3km';
+---
+
+<Base
+	title="Login"
+	exactTitle={true}
+	description="Portal login administrator PPID Kementerian Agama Kabupaten Barito Utara."
+>
+	<div class="min-h-screen w-full flex bg-background selection:bg-emerald-500/20 selection:text-[#007144]">
+		<!-- Left Showcase Panel (Clean, Elegant & Modern) -->
+		<div
+			class="hidden lg:flex w-1/2 bg-gradient-to-br from-[#022c1b] via-[#004d2e] to-[#013821] text-white flex-col justify-between p-12 relative overflow-hidden"
+		>
+			<!-- Ambient Glow & Subtle Pattern -->
+			<div
+				class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(0,180,100,0.18),transparent_70%)] pointer-events-none"
+			></div>
+			<div
+				class="absolute -bottom-28 -left-28 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"
+			></div>
+
+			<!-- Top Navigation -->
+			<div class="relative z-10">
+				<a
+					href="/"
+					class="inline-flex items-center gap-2 text-xs font-semibold text-white/90 hover:text-white transition-all bg-white/10 hover:bg-white/15 backdrop-blur-md px-4 py-2 rounded-xl border border-white/15 shadow-xs"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+					<span>Kembali ke Beranda</span>
+				</a>
+			</div>
+
+			<!-- Center Brand Content (Clean & High Contrast) -->
+			<div class="relative z-10 my-auto flex flex-col items-center text-center space-y-6 max-w-md mx-auto">
+				<div class="w-24 h-24 p-3.5 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center">
+					<img
+						src="/logo-kemenag.svg"
+						alt="Logo Kementerian Agama"
+						width="72"
+						height="72"
+						class="object-contain filter drop-shadow"
+					/>
+				</div>
+
+				<div class="space-y-2">
+					<h1 class="text-2xl xl:text-3xl font-extrabold tracking-tight text-white leading-tight">
+						PPID Kemenag Barito Utara
+					</h1>
+					<p class="text-emerald-100/85 text-xs xl:text-sm leading-relaxed font-medium">
+						Portal Pengelolaan Informasi dan Dokumentasi Publik Terpadu
+					</p>
+				</div>
+
+				<div class="pt-2">
+					<img
+						src="/hapakat.png"
+						alt="Motto Hapakat"
+						width="160"
+						height="45"
+						class="object-contain opacity-90 filter drop-shadow"
+					/>
+				</div>
+			</div>
+
+			<!-- Bottom Footer Info -->
+			<div class="relative z-10 text-center text-xs text-emerald-200/70">
+				&copy; {new Date().getFullYear()} Kantor Kementerian Agama Kabupaten Barito Utara
+			</div>
+		</div>
+
+		<!-- Right Form Panel -->
+		<div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 md:p-16 lg:p-20 relative bg-background">
+			<!-- Mobile Back Button -->
+			<div class="w-full max-w-sm lg:hidden mb-6 flex justify-start">
+				<a
+					href="/"
+					class="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-[#007144] transition-colors"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+					<span>Kembali ke Beranda</span>
+				</a>
+			</div>
+
+			<div class="w-full max-w-md flex justify-center">
+				<LoginForm siteKey={siteKey} client:load />
+			</div>
+		</div>
+	</div>
+
+	<script is:inline>
+		// Anti-Back Page Traversal: Prevent returning to admin panel using browser Back button after logout
+		(function () {
+			if (window.history && window.history.pushState) {
+				window.history.pushState(null, '', window.location.href);
+				window.onpopstate = function () {
+					window.history.pushState(null, '', window.location.href);
+				};
+			}
+			// Force reload if restored from browser bfcache
+			window.addEventListener('pageshow', function (e) {
+				if (e.persisted) {
+					window.location.reload();
+				}
+			});
+		})();
+	</script>
+</Base>

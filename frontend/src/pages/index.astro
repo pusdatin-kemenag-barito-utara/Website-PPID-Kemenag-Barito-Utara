@@ -1,0 +1,555 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import LatestDocs from '../components/react/LatestDocs';
+import { dataInformasiStatistik, dataInformasiInfografis } from '../data/data-informasi';
+
+const apiBase = 'http://127.0.0.1:8080/api/v1';
+
+let statistikItems = dataInformasiStatistik;
+let infografisItems: any[] = dataInformasiInfografis;
+let infoDocsCount = 15;
+let regulasiCount = 11;
+
+try {
+	const [resStat, resInfo, resDocs, resReg] = await Promise.all([
+		fetch(`${apiBase}/data-informasi/statistik`).then((r) => (r.ok ? r.json() : null)),
+		fetch(`${apiBase}/data-informasi/infografis`).then((r) => (r.ok ? r.json() : null)),
+		fetch(`${apiBase}/informasi-publik`).then((r) => (r.ok ? r.json() : null)),
+		fetch(`${apiBase}/regulasi`).then((r) => (r.ok ? r.json() : null)),
+	]);
+
+	if (resStat?.data?.items?.length) statistikItems = resStat.data.items;
+	if (resInfo?.data?.items?.length) infografisItems = resInfo.data.items;
+	if (resDocs?.data?.items?.length) infoDocsCount = resDocs.data.items.length;
+	if (resReg?.data?.items?.length) regulasiCount = resReg.data.items.length;
+} catch (e) {
+	// Graceful fallback to static data
+}
+---
+
+<Base
+	title="PPID Kementerian Agama Kabupaten Barito Utara"
+	description="Portal pelayanan informasi publik terpadu PPID Kantor Kementerian Agama Kabupaten Barito Utara — akuntabel, transparan, dan mudah dijangkau sesuai UU No. 14 Tahun 2008."
+>
+	<div class="w-full space-y-12 sm:space-y-16 pb-16 sm:pb-20">
+		<!-- 1. Hero Section -->
+		<section
+			class="relative bg-background border-b border-border/50 pt-6 sm:pt-10 pb-10 sm:pb-16 px-4 md:px-8 lg:px-12 overflow-hidden w-full"
+		>
+			<div class="w-full grid lg:grid-cols-12 gap-6 sm:gap-10 items-center">
+				<!-- Hero Left: Title, Intro, CTAs -->
+				<div class="lg:col-span-7 space-y-4 sm:space-y-6 text-left">
+					<div
+						class="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#007144] text-[11px] sm:text-xs font-extrabold uppercase tracking-wider"
+					>
+						<Icon name="shield-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+						<span>Portal Resmi Pelayanan Informasi Publik</span>
+					</div>
+
+					<h1 class="text-2xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tight leading-snug md:leading-[1.15]">
+						Keterbukaan Informasi Publik{" "}
+						<br class="hidden md:inline" />
+						<span class="text-[#007144]">Kemenag Barito Utara</span>
+					</h1>
+
+					<p class="text-muted-foreground text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl font-normal">
+						Pejabat Pengelola Informasi dan Dokumentasi (PPID) Kantor Kementerian Agama
+						Kabupaten Barito Utara berkomitmen melayani hak masyarakat atas informasi publik secara
+						cepat, akuntabel, dan transparan sesuai UU No. 14 Tahun 2008.
+					</p>
+
+					<!-- Action Buttons (Mobile Optimized: Primary Full + Secondary Grid) -->
+					<div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
+						<a
+							href="/layanan-informasi/permohonan"
+							data-analytics-event="cta_click"
+							data-analytics-category="hero"
+							data-analytics-label="Permohonan Informasi Online"
+							data-analytics-section="hero"
+							class="inline-flex items-center justify-center gap-2 bg-[#007144] text-white px-5 py-3 sm:px-6 sm:py-3.5 rounded-xl text-xs font-bold hover:bg-[#005935] active:scale-[0.98] transition-all shadow-sm text-center"
+						>
+							<Icon name="file-text" class="w-4 h-4 shrink-0" />
+							<span>Permohonan Informasi Online</span>
+						</a>
+
+						<div class="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
+							<a
+								href="/informasi-publik/berkala"
+								data-analytics-event="cta_click"
+								data-analytics-category="hero"
+								data-analytics-label="Katalog Publik"
+								data-analytics-section="hero"
+								class="inline-flex items-center justify-center gap-1.5 bg-accent/60 border border-border/80 text-foreground px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-xl text-xs font-bold hover:bg-accent transition-all text-center truncate"
+							>
+								<Icon name="folder-open" class="w-3.5 h-3.5 text-[#007144] shrink-0" />
+								<span class="truncate">Katalog Publik</span>
+							</a>
+
+							<a
+								href="/layanan-informasi/pengaduan"
+								data-analytics-event="cta_click"
+								data-analytics-category="hero"
+								data-analytics-label="Pengaduan Masyarakat"
+								data-analytics-section="hero"
+								class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-800 dark:text-sky-300 text-xs font-bold hover:bg-sky-500/20 transition-all text-center truncate"
+							>
+								<Icon name="message-square" class="w-3.5 h-3.5 shrink-0" />
+								<span class="truncate">Pengaduan</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Trust Badges (Mobile Clean Grid) -->
+					<div class="pt-3 sm:pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] sm:text-xs font-semibold text-muted-foreground border-t border-border/40">
+						<div class="flex items-center gap-2">
+							<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+							<span>Layanan 100% Bebas Biaya</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+							<span>Respon Standar &lt; 3 Hari</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+							<span>Pelayanan Terintegrasi Online</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Hero Right: Live Executive Data Overview Card -->
+				<div class="lg:col-span-5">
+					<div
+						class="p-4 sm:p-6 md:p-7 rounded-3xl bg-card border border-border/70 shadow-lg space-y-4 sm:space-y-5 relative overflow-hidden"
+					>
+						<div class="flex items-center justify-between border-b border-border/50 pb-3 sm:pb-4">
+							<div class="flex items-center gap-2.5">
+								<div class="p-2 rounded-xl bg-emerald-500/10 text-[#007144]">
+									<Icon name="bar-chart-3" class="w-4 h-4 sm:w-5 sm:h-5" />
+								</div>
+								<div>
+									<h3 class="font-extrabold text-sm sm:text-base text-foreground">Ikhtisar Portal Publik</h3>
+									<p class="text-[10px] sm:text-[11px] text-muted-foreground">Sinkronisasi data real-time PPID</p>
+								</div>
+							</div>
+							<span
+								class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/15 text-[#007144] text-[9px] sm:text-[10px] font-extrabold uppercase shrink-0"
+							>
+								<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+								Aktif &amp; Terhubung
+							</span>
+						</div>
+
+						<!-- 4 Quick Stats Grid -->
+						<div class="grid grid-cols-2 gap-2 sm:gap-3">
+							<div class="p-3 sm:p-4 rounded-2xl bg-accent/30 border border-border/50 space-y-0.5 sm:space-y-1">
+								<span class="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-wider block">
+									Informasi Publik
+								</span>
+								<div class="text-xl sm:text-2xl md:text-3xl font-black text-foreground font-mono">
+									{infoDocsCount}
+								</div>
+								<p class="text-[10px] sm:text-[11px] text-muted-foreground truncate">Dokumen berkala &amp; tersedia</p>
+							</div>
+
+							<div class="p-3 sm:p-4 rounded-2xl bg-accent/30 border border-border/50 space-y-0.5 sm:space-y-1">
+								<span class="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-wider block">
+									Regulasi &amp; SK
+								</span>
+								<div class="text-xl sm:text-2xl md:text-3xl font-black text-foreground font-mono">
+									{regulasiCount}
+								</div>
+								<p class="text-[10px] sm:text-[11px] text-muted-foreground truncate">UU, PMA &amp; SK Tim PPID</p>
+							</div>
+
+							<div class="p-3 sm:p-4 rounded-2xl bg-accent/30 border border-border/50 space-y-0.5 sm:space-y-1">
+								<span class="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-wider block">
+									Data Statistik
+								</span>
+								<div class="text-xl sm:text-2xl md:text-3xl font-black text-[#007144] font-mono">
+									{statistikItems.length}
+								</div>
+								<p class="text-[10px] sm:text-[11px] text-muted-foreground truncate">Indikator sektoral aktif</p>
+							</div>
+
+							<div class="p-3 sm:p-4 rounded-2xl bg-accent/30 border border-border/50 space-y-0.5 sm:space-y-1">
+								<span class="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-wider block">
+									Poster Infografis
+								</span>
+								<div class="text-xl sm:text-2xl md:text-3xl font-black text-purple-700 dark:text-purple-400 font-mono">
+									{infografisItems.length}
+								</div>
+								<p class="text-[10px] sm:text-[11px] text-muted-foreground truncate">Publikasi visual keagamaan</p>
+							</div>
+						</div>
+
+						<!-- Notification Callout -->
+						<div class="p-3 sm:p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-foreground/90 space-y-1">
+							<div class="font-bold text-[#007144] flex items-center gap-1.5 text-xs">
+								<Icon name="search" class="w-3.5 h-3.5 shrink-0" />
+								<span>Lacak Status Permohonan Anda</span>
+							</div>
+							<p class="text-[10px] sm:text-[11px] text-muted-foreground leading-relaxed">
+								Gunakan tombol <strong>Lacak Tiket</strong> di pojok kanan atas untuk memantau proses permohonan informasi atau pengaduan secara instan.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 2. Tiga Pilar Layanan Utama (Akses Cepat Warga) -->
+		<section class="px-4 md:px-8 lg:px-12 w-full space-y-4 sm:space-y-6">
+			<div class="flex items-start sm:items-center justify-between gap-2 border-b border-border/50 pb-3 sm:pb-4">
+				<div>
+					<h2 class="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
+						Layanan Informasi &amp; Pengaduan
+					</h2>
+					<p class="text-xs text-muted-foreground mt-0.5">
+						Saluran resmi pengajuan dokumen, keberatan, serta penyampaian aspirasi masyarakat
+					</p>
+				</div>
+				<a href="/layanan-informasi/permohonan" class="text-xs font-bold text-[#007144] hover:underline flex items-center gap-1 shrink-0">
+					<span>Semua Layanan</span>
+					<Icon name="chevron-right" class="w-3.5 h-3.5" />
+				</a>
+			</div>
+
+			<div class="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
+				<!-- Card 1: Permohonan Informasi -->
+				<a
+					href="/layanan-informasi/permohonan"
+					data-analytics-event="service_click"
+					data-analytics-category="layanan"
+					data-analytics-label="Permohonan Informasi"
+					data-analytics-section="pilar_layanan"
+					class="p-4 sm:p-6 rounded-2xl bg-card border border-border/60 shadow-xs hover:border-[#007144]/40 hover:shadow-md transition-all space-y-3 sm:space-y-4 group block"
+				>
+					<div
+						class="p-2.5 sm:p-3 rounded-xl bg-emerald-500/10 text-[#007144] w-fit group-hover:bg-[#007144] group-hover:text-white transition-colors"
+					>
+						<Icon name="file-text" class="w-5 h-5 sm:w-6 sm:h-6" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-extrabold text-sm sm:text-base text-foreground group-hover:text-[#007144] transition-colors">
+							Permohonan Informasi
+						</h3>
+						<p class="text-xs text-muted-foreground leading-relaxed">
+							Pengajuan dokumen resmi, data anggaran, dan informasi publik instansi secara online.
+						</p>
+					</div>
+					<div class="flex items-center gap-1 text-xs font-bold text-[#007144] pt-1 sm:pt-2">
+						<span>Isi Formulir Online</span>
+						<Icon name="chevron-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+					</div>
+				</a>
+
+				<!-- Card 2: Pengajuan Keberatan -->
+				<a
+					href="/layanan-informasi/keberatan"
+					data-analytics-event="service_click"
+					data-analytics-category="layanan"
+					data-analytics-label="Pengajuan Keberatan"
+					data-analytics-section="pilar_layanan"
+					class="p-4 sm:p-6 rounded-2xl bg-card border border-border/60 shadow-xs hover:border-amber-600/40 hover:shadow-md transition-all space-y-3 sm:space-y-4 group block"
+				>
+					<div
+						class="p-2.5 sm:p-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 w-fit group-hover:bg-amber-600 group-hover:text-white transition-colors"
+					>
+						<Icon name="alert-triangle" class="w-5 h-5 sm:w-6 sm:h-6" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-extrabold text-sm sm:text-base text-foreground group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+							Pengajuan Keberatan
+						</h3>
+						<p class="text-xs text-muted-foreground leading-relaxed">
+							Formulir sanggahan resmi bagi pemohon jika permohonan informasi tidak ditanggapi.
+						</p>
+					</div>
+					<div class="flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-400 pt-1 sm:pt-2">
+						<span>Formulir Keberatan</span>
+						<Icon name="chevron-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+					</div>
+				</a>
+
+				<!-- Card 3: Pengaduan Masyarakat -->
+				<a
+					href="/layanan-informasi/pengaduan"
+					data-analytics-event="service_click"
+					data-analytics-category="layanan"
+					data-analytics-label="Pengaduan Masyarakat"
+					data-analytics-section="pilar_layanan"
+					class="p-4 sm:p-6 rounded-2xl bg-card border border-border/60 shadow-xs hover:border-sky-600/40 hover:shadow-md transition-all space-y-3 sm:space-y-4 group block"
+				>
+					<div
+						class="p-2.5 sm:p-3 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 w-fit group-hover:bg-sky-600 group-hover:text-white transition-colors"
+					>
+						<Icon name="message-square" class="w-5 h-5 sm:w-6 sm:h-6" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-extrabold text-sm sm:text-base text-foreground group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">
+							Pengaduan Masyarakat
+						</h3>
+						<p class="text-xs text-muted-foreground leading-relaxed">
+							Saluran penyampaian aspirasi, saran, serta laporan pengaduan pelayanan keagamaan.
+						</p>
+					</div>
+					<div class="flex items-center gap-1 text-xs font-bold text-sky-700 dark:text-sky-400 pt-1 sm:pt-2">
+						<span>Sampaikan Pengaduan</span>
+						<Icon name="chevron-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+					</div>
+				</a>
+
+				<!-- Card 4: SOP & Standar Pelayanan -->
+				<a
+					href="/layanan-informasi/sop"
+					data-analytics-event="service_click"
+					data-analytics-category="layanan"
+					data-analytics-label="SOP & Standar Layanan"
+					data-analytics-section="pilar_layanan"
+					class="p-4 sm:p-6 rounded-2xl bg-card border border-border/60 shadow-xs hover:border-blue-600/40 hover:shadow-md transition-all space-y-3 sm:space-y-4 group block"
+				>
+					<div
+						class="p-2.5 sm:p-3 rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-400 w-fit group-hover:bg-blue-600 group-hover:text-white transition-colors"
+					>
+						<Icon name="file-check" class="w-5 h-5 sm:w-6 sm:h-6" />
+					</div>
+					<div class="space-y-1">
+						<h3 class="font-extrabold text-sm sm:text-base text-foreground group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
+							SOP &amp; Standar Layanan
+						</h3>
+						<p class="text-xs text-muted-foreground leading-relaxed">
+							Maklumat pelayanan, waktu operasional, serta Standard Operating Procedure PPID.
+						</p>
+					</div>
+					<div class="flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 pt-1 sm:pt-2">
+						<span>Lihat Prosedur SOP</span>
+						<Icon name="chevron-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+					</div>
+				</a>
+			</div>
+		</section>
+
+		<!-- 3. Indikator Data Sektoral Keagamaan (Live BE Synchronized) -->
+		<section class="px-4 md:px-8 lg:px-12 w-full">
+			<div class="p-4 sm:p-8 md:p-10 rounded-3xl bg-accent/25 border border-border/60 space-y-4 sm:space-y-6 w-full">
+				<div
+					class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 border-b border-border/50 pb-3 sm:pb-4"
+				>
+					<div>
+						<div class="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold text-[#007144] uppercase tracking-wider mb-0.5 sm:mb-1">
+							<Icon name="bar-chart-3" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+							<span>Data Informasi &amp; Statistik Sektoral</span>
+						</div>
+						<h2 class="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
+							Capaian Pelayanan Keagamaan Barito Utara
+						</h2>
+						<p class="text-xs text-muted-foreground mt-0.5">
+							Data riil hasil rekapitulasi data sektoral Kantor Kemenag Kabupaten Barito Utara
+						</p>
+					</div>
+					<a
+						href="/data-informasi"
+						data-analytics-event="navigation"
+						data-analytics-category="data_sektoral"
+						data-analytics-label="Dashboard Data Lengkap"
+						class="text-xs font-bold text-[#007144] hover:underline flex items-center gap-1 shrink-0"
+					>
+						<span>Dashboard Data Lengkap</span>
+						<Icon name="chevron-right" class="w-3.5 h-3.5" />
+					</a>
+				</div>
+
+				<!-- Live Data Grid (2 cols on mobile, 4 cols on desktop) -->
+				<div class="grid gap-2.5 sm:gap-4 grid-cols-2 lg:grid-cols-4 w-full">
+					{statistikItems.slice(0, 4).map((st: any) => (
+						<div
+							class="p-3.5 sm:p-5 rounded-2xl bg-card border border-border/60 shadow-xs space-y-1 sm:space-y-2 hover:border-[#007144]/30 transition-colors"
+						>
+							<span
+								class="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground tracking-wider block truncate"
+							>
+								{st.label}
+							</span>
+							<div class="flex items-baseline gap-1">
+								<span class="text-2xl sm:text-3xl font-black text-[#007144] font-mono">{st.nilai}</span>
+								<span class="text-[10px] sm:text-xs font-bold text-muted-foreground">{st.satuan}</span>
+							</div>
+							<p class="text-[10px] sm:text-[11px] text-muted-foreground leading-snug line-clamp-2">{st.deskripsi}</p>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<!-- 4. Infografis Visual Keagamaan (Live BE Synchronized) -->
+		{infografisItems && infografisItems.length > 0 && (
+			<section class="px-4 md:px-8 lg:px-12 w-full space-y-4 sm:space-y-6">
+				<div class="flex items-start sm:items-center justify-between gap-2 border-b border-border/50 pb-3 sm:pb-4">
+					<div>
+						<div class="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold text-[#007144] uppercase tracking-wider mb-0.5 sm:mb-1">
+							<Icon name="folder-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+							<span>Publikasi Visual</span>
+						</div>
+						<h2 class="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
+							Infografis Keagamaan
+						</h2>
+						<p class="text-xs text-muted-foreground mt-0.5">
+							Sajian informasi dan data statistik dalam bentuk poster visual grafis
+						</p>
+					</div>
+					<a
+						href="/data-informasi/infografis"
+						data-analytics-event="navigation"
+						data-analytics-category="infografis"
+						data-analytics-label="Semua Infografis"
+						class="text-xs font-bold text-[#007144] hover:underline flex items-center gap-1 shrink-0"
+					>
+						<span>Semua Infografis</span>
+						<Icon name="chevron-right" class="w-3.5 h-3.5" />
+					</a>
+				</div>
+
+				<div class="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full">
+					{infografisItems.slice(0, 3).map((info: any) => (
+						<a
+							href="/data-informasi/infografis"
+							data-analytics-event="view_infografis"
+							data-analytics-category="infografis"
+							data-analytics-label={info.judul}
+							class="group rounded-2xl bg-card border border-border/60 overflow-hidden shadow-xs hover:border-[#007144]/40 hover:shadow-md transition-all flex flex-col justify-between block"
+						>
+							<div class="space-y-2 sm:space-y-3">
+								<div class="aspect-[16/10] sm:aspect-4/3 w-full bg-accent/40 relative overflow-hidden flex items-center justify-center">
+									{info.image_url || info.imageUrl ? (
+										<img
+											src={info.image_url || info.imageUrl}
+											alt={info.judul}
+											class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+											loading="lazy"
+										/>
+									) : (
+										<div class="flex flex-col items-center gap-2 text-muted-foreground">
+											<Icon name="folder-open" class="w-8 h-8 text-[#007144]" />
+											<span class="text-xs font-bold">Poster Infografis</span>
+										</div>
+									)}
+								</div>
+
+								<div class="p-4 sm:p-5 space-y-1.5 sm:space-y-2">
+									<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-[#007144]">
+										{info.kategori || 'Keagamaan'}
+									</span>
+									<h3 class="font-extrabold text-sm text-foreground leading-snug group-hover:text-[#007144] transition-colors line-clamp-2">
+										{info.judul}
+									</h3>
+									<p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+										{info.deskripsi}
+									</p>
+								</div>
+							</div>
+
+							<div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-2 flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground border-t border-border/40">
+								<span>{info.tanggal}</span>
+								<span class="font-bold text-[#007144] group-hover:underline">Buka Poster &rarr;</span>
+							</div>
+						</a>
+					))}
+				</div>
+			</section>
+		)}
+
+		<!-- 5. Dokumen Publik Terbaru -->
+		<section class="px-4 md:px-8 lg:px-12 w-full space-y-4 sm:space-y-6">
+			<div class="flex items-start sm:items-center justify-between gap-2 border-b border-border/50 pb-3 sm:pb-4">
+				<div>
+					<h2 class="text-lg sm:text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
+						Dokumen Publik Terbaru
+					</h2>
+					<p class="text-xs text-muted-foreground mt-0.5">
+						Arsip publikasi informasi berkala dan regulasi resmi PPID yang dapat diunduh langsung
+					</p>
+				</div>
+				<a
+					href="/informasi-publik/berkala"
+					data-analytics-event="navigation"
+					data-analytics-category="dokumen"
+					data-analytics-label="Katalog Dokumen Terbaru"
+					class="text-xs font-bold text-[#007144] hover:underline flex items-center gap-1 shrink-0"
+				>
+					<span>Katalog ({infoDocsCount})</span>
+					<Icon name="chevron-right" class="w-3.5 h-3.5" />
+				</a>
+			</div>
+
+			<LatestDocs client:load />
+		</section>
+
+		<!-- 6. Alur Singkat Pelayanan Informasi -->
+		<section class="px-4 md:px-8 lg:px-12 w-full">
+			<div class="p-5 sm:p-8 md:p-10 rounded-3xl bg-card border border-border/60 shadow-xs space-y-6 sm:space-y-8">
+				<div class="text-center max-w-xl mx-auto space-y-1">
+					<span class="text-[10px] font-extrabold uppercase tracking-widest text-[#007144] bg-emerald-500/10 px-3 py-0.5 sm:py-1 rounded-full border border-emerald-500/20 inline-block">
+						Transparan &amp; Cepat
+					</span>
+					<h2 class="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+						Alur Permohonan Informasi Publik
+					</h2>
+					<p class="text-xs text-muted-foreground">
+						Empat tahapan sederhana dalam mengajukan dan memperoleh dokumen publik resmi
+					</p>
+				</div>
+
+				<div class="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+					<div class="p-3.5 sm:p-5 rounded-2xl bg-accent/25 border border-border/40 flex sm:flex-col items-start gap-3.5 sm:gap-3 relative">
+						<div class="w-8 h-8 rounded-xl bg-[#007144] text-white flex items-center justify-center font-black text-sm font-mono shrink-0">
+							1
+						</div>
+						<div class="space-y-1 flex-1 min-w-0">
+							<h3 class="font-extrabold text-sm text-foreground">Pengajuan Online</h3>
+							<p class="text-xs text-muted-foreground leading-relaxed">
+								Pemohon mengisi formulir permohonan informasi secara online serta mengunggah KTP identitas.
+							</p>
+						</div>
+					</div>
+
+					<div class="p-3.5 sm:p-5 rounded-2xl bg-accent/25 border border-border/40 flex sm:flex-col items-start gap-3.5 sm:gap-3 relative">
+						<div class="w-8 h-8 rounded-xl bg-[#007144] text-white flex items-center justify-center font-black text-sm font-mono shrink-0">
+							2
+						</div>
+						<div class="space-y-1 flex-1 min-w-0">
+							<h3 class="font-extrabold text-sm text-foreground">Pemberian Tiket</h3>
+							<p class="text-xs text-muted-foreground leading-relaxed">
+								Sistem menerbitkan nomor registrasi tiket resmi (contoh: <code>PPID-2026-0001</code>) secara instan.
+							</p>
+						</div>
+					</div>
+
+					<div class="p-3.5 sm:p-5 rounded-2xl bg-accent/25 border border-border/40 flex sm:flex-col items-start gap-3.5 sm:gap-3 relative">
+						<div class="w-8 h-8 rounded-xl bg-[#007144] text-white flex items-center justify-center font-black text-sm font-mono shrink-0">
+							3
+						</div>
+						<div class="space-y-1 flex-1 min-w-0">
+							<h3 class="font-extrabold text-sm text-foreground">Verifikasi &amp; Telaah</h3>
+							<p class="text-xs text-muted-foreground leading-relaxed">
+								Petugas PPID memverifikasi kelengkapan berkas dan menyiapkan dokumen yang dimohon.
+							</p>
+						</div>
+					</div>
+
+					<div class="p-3.5 sm:p-5 rounded-2xl bg-accent/25 border border-border/40 flex sm:flex-col items-start gap-3.5 sm:gap-3 relative">
+						<div class="w-8 h-8 rounded-xl bg-[#007144] text-white flex items-center justify-center font-black text-sm font-mono shrink-0">
+							4
+						</div>
+						<div class="space-y-1 flex-1 min-w-0">
+							<h3 class="font-extrabold text-sm text-foreground">Penyerahan Dokumen</h3>
+							<p class="text-xs text-muted-foreground leading-relaxed">
+								Pemberitahuan tertulis dan salinan dokumen resmi diserahkan ke pemohon melalui online / tatap muka.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+</Base>

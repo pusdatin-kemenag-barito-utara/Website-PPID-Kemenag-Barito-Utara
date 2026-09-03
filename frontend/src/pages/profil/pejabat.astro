@@ -1,0 +1,47 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/Hero.astro';
+import Icon from '../../components/Icon.astro';
+import { profilData } from '../../data/profil';
+---
+
+<Base
+	title="Profil Pejabat"
+	description="Daftar pimpinan dan pejabat pengelola informasi dan dokumentasi di Kementerian Agama Barito Utara."
+>
+	<div class="w-full px-4 md:px-8 lg:px-12 py-10 space-y-10">
+		<Hero
+			icon="users"
+			badge="Profil Pejabat"
+			title="Profil Pejabat Pengelola PPID"
+			subtitle="Daftar pimpinan dan pejabat pengelola informasi dan dokumentasi di Kementerian Agama Kabupaten Barito Utara."
+		/>
+
+		<section class="space-y-6">
+			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				{
+					profilData.pejabat.map((p) => (
+						<div
+							class="p-8 rounded-3xl bg-card border border-border/60 shadow-xs space-y-4 text-center flex flex-col items-center hover:border-[#007144]/40 transition-all"
+						>
+							<div
+								class="w-24 h-24 rounded-full bg-emerald-500/10 text-[#007144] border-2 border-[#007144]/20 flex items-center justify-center font-extrabold text-2xl shadow-xs"
+							>
+								{p.nama ? p.nama.charAt(0) : <Icon name="user-check" class="w-8 h-8" />}
+							</div>
+							<div class="space-y-1.5">
+								<h3 class="font-extrabold text-lg text-foreground">{p.nama}</h3>
+								<p class="text-xs font-bold text-[#007144]">{p.jabatan}</p>
+								{p.nip && (
+									<p class="text-xs text-muted-foreground mt-2 font-medium">
+										NIP. {p.nip}
+									</p>
+								)}
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</section>
+	</div>
+</Base>
