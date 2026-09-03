@@ -41,7 +41,7 @@ type Config struct {
 func Load() *Config {
 	_ = godotenv.Load("../.env.local", ".env.local", "../../.env.local", "../.env", ".env")
 	return &Config{
-		Port:               getEnv("PORT", "8080"),
+		Port:               getEnv("BACKEND_PORT", "8080"),
 		Env:                getEnv("APP_ENV", "development"),
 		AppName:            getEnv("APP_NAME", "ppid-kemenag-api"),
 		DatabaseURL:        os.Getenv("DATABASE_URL"),

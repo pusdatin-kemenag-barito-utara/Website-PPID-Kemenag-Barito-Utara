@@ -56,7 +56,7 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata curl bash
+RUN apk add --no-cache ca-certificates tzdata curl wget bash
 
 # Copy Go backend binary
 COPY --from=go-builder /app/ppid-api /app/ppid-api

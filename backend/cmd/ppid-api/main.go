@@ -126,9 +126,12 @@ func main() {
 	systemHandler := systemhandler.NewHandler(systemSvc)
 
 	// --- Routes ---
-	apiV1 := app.Group("/api/v1")
+	healthHandler := health.NewHandler(pool)
+	app.Get("/health", healthHandler.Check)
+	app.Get("/api/health", healthHandler.Check)
 
-	apiV1.Get("/health", health.NewHandler(pool).Check)
+	apiV1 := app.Group("/api/v1")
+	apiV1.Get("/health", healthHandler.Check)
 	apiV1.Get("/system/status", systemHandler.GetStatus)
 
 	// Cloudflare CDN Edge Caching for Public GET Endpoints

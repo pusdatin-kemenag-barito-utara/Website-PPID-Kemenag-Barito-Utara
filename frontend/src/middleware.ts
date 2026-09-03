@@ -95,6 +95,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		}
 	}
 
+	// Healthcheck bypass: Return instant 200 OK for Coolify / Docker monitoring
+	if (url.pathname === '/api/health' || url.pathname === '/health') {
+		return new Response(
+			JSON.stringify({ status: 'ok', service: 'ppid-kemenag', timestamp: new Date().toISOString() }),
+			{
+				status: 200,
+				headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache, no-store' },
+			},
+		);
+	}
+
 	// Proxy API calls to the Go backend.
 	if (url.pathname.startsWith('/api/')) {
 		const upstreamUrl = new URL(url.pathname + url.search, UPSTREAM);
