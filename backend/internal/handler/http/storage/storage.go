@@ -2,6 +2,8 @@ package storage
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -104,6 +106,31 @@ func (h *Handler) Stream(c fiber.Ctx) error {
 		if err == nil && len(data) > 0 {
 			key = candidate
 			break
+		}
+	}
+
+	// Resilient fallback: If S3 GetObject failed, fetch directly from public CDN URL
+	if err != nil || len(data) == 0 {
+		cdnKey := cleanKey
+		if !strings.HasPrefix(cdnKey, "ppid/") {
+			cdnKey = "ppid/" + cdnKey
+		}
+		cdnUrl := fmt.Sprintf("https://files.kemenag-baritoutara.com/%s", cdnKey)
+		req, reqErr := http.NewRequestWithContext(c.Context(), http.MethodGet, cdnUrl, nil)
+		if reqErr == nil {
+			resp, httpErr := http.DefaultClient.Do(req)
+			if httpErr == nil && resp.StatusCode == http.StatusOK {
+				defer resp.Body.Close()
+				bodyData, readErr := io.ReadAll(resp.Body)
+				if readErr == nil && len(bodyData) > 0 {
+					data = bodyData
+					contentType = resp.Header.Get("Content-Type")
+					if contentType == "" {
+						contentType = "application/pdf"
+					}
+					err = nil
+				}
+			}
 		}
 	}
 
