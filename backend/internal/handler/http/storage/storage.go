@@ -83,17 +83,31 @@ func (h *Handler) Stream(c fiber.Ctx) error {
 		return platform.Fail(c, platform.Validationf("Key berkas diperlukan."))
 	}
 
-	key = strings.TrimPrefix(key, "/")
-	if idx := strings.Index(key, "informasi-publik/"); idx >= 0 {
-		key = key[idx:]
-	} else if idx := strings.Index(key, "regulasi/"); idx >= 0 {
-		key = key[idx:]
-	} else if idx := strings.Index(key, "dokumen-ppid/"); idx >= 0 {
-		key = key[idx:]
+	cleanKey := strings.TrimPrefix(key, "/")
+	candidates := []string{cleanKey}
+	if !strings.HasPrefix(cleanKey, "ppid/") {
+		candidates = append(candidates, "ppid/"+cleanKey)
+	}
+	if idx := strings.Index(cleanKey, "informasi-publik/"); idx >= 0 {
+		candidates = append(candidates, cleanKey[idx:], "ppid/"+cleanKey[idx:])
+	} else if idx := strings.Index(cleanKey, "regulasi/"); idx >= 0 {
+		candidates = append(candidates, cleanKey[idx:], "ppid/"+cleanKey[idx:])
+	} else if idx := strings.Index(cleanKey, "dokumen-ppid/"); idx >= 0 {
+		candidates = append(candidates, cleanKey[idx:], "ppid/"+cleanKey[idx:])
 	}
 
-	data, contentType, err := h.store.Get(c.Context(), key)
-	if err != nil {
+	var data []byte
+	var contentType string
+	var err error
+	for _, candidate := range candidates {
+		data, contentType, err = h.store.Get(c.Context(), candidate)
+		if err == nil && len(data) > 0 {
+			key = candidate
+			break
+		}
+	}
+
+	if err != nil || len(data) == 0 {
 		return c.Status(fiber.StatusNotFound).SendString("Berkas tidak ditemukan di Cloudflare R2.")
 	}
 

@@ -105,16 +105,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		// previous/next content with back/forward history before smooth transition.
 	}
 
-	// 3. Security Guard: Obsolete login URLs return 404
+	// 3. Login redirect: Route /admin/login and /login directly to official auth page
 	if (url.pathname === '/admin/login' || url.pathname === '/login') {
-		return context.redirect('/404');
+		return context.redirect('/pusdatin/auth');
 	}
 
-	// 4. Admin route protection: Require active session or return 404
+	// 4. Admin route protection: Require active session or redirect to login page
 	if (url.pathname.startsWith('/admin')) {
 		const hasSession = Boolean(context.cookies.get(ADMIN_COOKIE)?.value);
 		if (!hasSession) {
-			return context.redirect('/404');
+			return context.redirect('/pusdatin/auth');
 		}
 	}
 

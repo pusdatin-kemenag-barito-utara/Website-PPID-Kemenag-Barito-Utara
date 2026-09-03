@@ -282,6 +282,13 @@ export default function Footer({ currentPath = "" }: FooterProps) {
             &copy; {new Date().getFullYear()} PPID Kemenag Barito Utara. Hak cipta dilindungi.
           </p>
           <div className="flex items-center gap-2">
+            <a
+              href="/pusdatin/auth"
+              className="inline-flex items-center rounded-full bg-zinc-200/80 dark:bg-zinc-800/80 hover:bg-zinc-300 dark:hover:bg-zinc-700 px-2.5 py-0.5 text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 transition-colors"
+              title="Akses Portal Khusus Admin PPID"
+            >
+              Portal Admin
+            </a>
             <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950/40 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
               Layanan Aktif
             </span>
