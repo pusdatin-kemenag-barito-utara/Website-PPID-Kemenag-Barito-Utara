@@ -110,8 +110,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		return context.redirect('/pusdatin/auth');
 	}
 
-	// 4. Admin route protection: Require active session or redirect to login page
-	if (url.pathname.startsWith('/admin')) {
+	// 4. Admin route protection: Require active session or redirect to login page (/admin/logout exempt)
+	if (url.pathname.startsWith('/admin') && url.pathname !== '/admin/logout') {
 		const hasSession = Boolean(context.cookies.get(ADMIN_COOKIE)?.value);
 		if (!hasSession) {
 			return context.redirect('/pusdatin/auth');
@@ -167,6 +167,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 			const responseHeaders = new Headers(upstreamRes.headers);
 			responseHeaders.delete('content-length');
+
+			// If logout endpoint, explicitly enforce deleting HttpOnly auth cookie
+			if (url.pathname.endsWith('/auth/logout')) {
+				responseHeaders.append('Set-Cookie', `${ADMIN_COOKIE}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`);
+			}
 
 			// Cloudflare edge cache control: never cache API responses
 			responseHeaders.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');

@@ -9,7 +9,9 @@ const PRECACHE_ASSETS = [
 	'/logo-kemenag.svg',
 	'/hapakat.png',
 	'/favicon.svg',
-	'/favicon.ico',
+	'/icon-192.png',
+	'/icon-512.png',
+	'/apple-touch-icon.png',
 ];
 
 // Install Event - Precache core app shell

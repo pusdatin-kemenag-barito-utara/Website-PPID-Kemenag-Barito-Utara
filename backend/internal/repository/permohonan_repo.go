@@ -140,3 +140,18 @@ func (r *PermohonanRepository) UpdateStatus(ctx context.Context, id, status stri
 	}
 	return nil
 }
+
+// Delete permanently removes a permohonan record from the database.
+// Foreign keys (e.g. notifikasi) are automatically deleted via ON DELETE CASCADE.
+func (r *PermohonanRepository) Delete(ctx context.Context, id string) error {
+	tag, err := r.pool.Exec(ctx,
+		`DELETE FROM "kemenag_ppid"."permohonan" WHERE "id" = $1`,
+		id)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return platform.NotFoundf("Permohonan tidak ditemukan.")
+	}
+	return nil
+}

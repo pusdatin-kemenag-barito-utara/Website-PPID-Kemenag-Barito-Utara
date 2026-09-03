@@ -23,6 +23,9 @@ func EnsureAdminUser(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config
 		return nil
 	}
 
+	// Purge any foreign or legacy admin account other than the authorized AdminEmail
+	_, _ = pool.Exec(ctx, `DELETE FROM kemenag_ppid.admin_users WHERE email != $1`, email)
+
 	existingUser, err := repo.FindByEmail(ctx, email)
 	if err != nil && !platform.Is(err, platform.ErrNotFound) {
 		return fmt.Errorf("check admin user: %w", err)

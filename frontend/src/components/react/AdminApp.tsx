@@ -131,21 +131,17 @@ export default function AdminApp({ page, userEmail, userFullName }: Props) {
       // ignore
     }
 
-    // 1. Immediately invalidate client-side session cookie
+    // 1. Immediately invalidate client-side session cookie if accessible
     document.cookie = "ppid_admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
 
     // 2. Clear all client storage
     try {
       sessionStorage.clear();
-      localStorage.removeItem("ppid_admin_user");
-      localStorage.removeItem("ppid_admin_token");
+      localStorage.clear();
     } catch {}
 
-    // 3. Clear and replace browser history so user cannot navigate back to admin
-    if (window.history && window.history.pushState) {
-      window.history.pushState(null, "", "/pusdatin/auth");
-    }
-    window.location.replace("/pusdatin/auth");
+    // 3. Navigate directly to server-side logout route to purge HttpOnly cookie permanently
+    window.location.href = "/admin/logout";
   };
 
   const renderContent = () => {

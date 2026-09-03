@@ -230,6 +230,7 @@ func main() {
 
 	adminGroup.Get("/permohonan", permohonanHandler.ListAll)
 	adminGroup.Patch("/permohonan/:id/status", permohonanHandler.UpdateStatus)
+	adminGroup.Delete("/permohonan/:id", permohonanHandler.Delete)
 	adminGroup.Post("/permohonan/:id/notifikasi", notifHandler.Send)
 	adminGroup.Get("/permohonan/:id/notifikasi", notifHandler.History)
 

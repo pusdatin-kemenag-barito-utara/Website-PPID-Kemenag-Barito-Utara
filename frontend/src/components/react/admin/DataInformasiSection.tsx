@@ -23,6 +23,7 @@ import {
 	cn,
 	StatusBadge,
 	FileUploadField,
+	ModernSelect,
 } from './shared';
 
 function ConfirmModal({
@@ -441,17 +442,18 @@ export default function DataInformasiSection() {
 								className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-input bg-card text-foreground text-xs focus:ring-2 focus:ring-[#007144] focus:outline-hidden"
 							/>
 						</div>
-						<select
+						<ModernSelect
 							value={kategoriStatistik}
-							onChange={(e) => setKategoriStatistik(e.target.value)}
-							className="px-3.5 py-2.5 rounded-xl border border-input bg-card text-foreground text-xs focus:ring-2 focus:ring-[#007144] focus:outline-hidden cursor-pointer w-full sm:w-auto"
-						>
-							<option value="">Semua Kategori</option>
-							<option value="Keagamaan">Keagamaan</option>
-							<option value="Pendidikan">Pendidikan</option>
-							<option value="Layanan KUA">Layanan KUA</option>
-							<option value="PPID">PPID</option>
-						</select>
+							onChange={setKategoriStatistik}
+							options={[
+								{ value: '', label: 'Semua Kategori' },
+								{ value: 'Keagamaan', label: 'Keagamaan' },
+								{ value: 'Pendidikan', label: 'Pendidikan' },
+								{ value: 'Layanan KUA', label: 'Layanan KUA' },
+								{ value: 'PPID', label: 'PPID' },
+							]}
+							className="w-full sm:w-48 shrink-0"
+						/>
 					</div>
 
 					{/* Statistik Table */}
@@ -561,17 +563,18 @@ export default function DataInformasiSection() {
 								className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-input bg-card text-foreground text-xs focus:ring-2 focus:ring-[#007144] focus:outline-hidden"
 							/>
 						</div>
-						<select
+						<ModernSelect
 							value={kategoriInfografis}
-							onChange={(e) => setKategoriInfografis(e.target.value)}
-							className="px-3.5 py-2.5 rounded-xl border border-input bg-card text-foreground text-xs focus:ring-2 focus:ring-[#007144] focus:outline-hidden cursor-pointer w-full sm:w-auto"
-						>
-							<option value="">Semua Kategori</option>
-							<option value="Keagamaan">Keagamaan</option>
-							<option value="Pendidikan">Pendidikan</option>
-							<option value="Layanan KUA">Layanan KUA</option>
-							<option value="Haji &amp; Umrah">Haji &amp; Umrah</option>
-						</select>
+							onChange={setKategoriInfografis}
+							options={[
+								{ value: '', label: 'Semua Kategori' },
+								{ value: 'Keagamaan', label: 'Keagamaan' },
+								{ value: 'Pendidikan', label: 'Pendidikan' },
+								{ value: 'Layanan KUA', label: 'Layanan KUA' },
+								{ value: 'Haji & Umrah', label: 'Haji & Umrah' },
+							]}
+							className="w-full sm:w-48 shrink-0"
+						/>
 					</div>
 
 					{/* Infografis Table / Grid */}
@@ -748,18 +751,19 @@ export default function DataInformasiSection() {
 
 								<div>
 									<label className={labelCls}>Kategori Sektor *</label>
-									<select
+									<ModernSelect
 										value={formStatistik.kategori}
-										onChange={(e) => setFormStatistik({ ...formStatistik, kategori: e.target.value })}
-										className={inputCls}
-									>
-										<option value="Keagamaan">Keagamaan</option>
-										<option value="Pendidikan">Pendidikan</option>
-										<option value="Layanan KUA">Layanan KUA</option>
-										<option value="PPID">PPID</option>
-										<option value="Bimmas Islam">Bimmas Islam</option>
-										<option value="Haji &amp; Umrah">Haji &amp; Umrah</option>
-									</select>
+										onChange={(val) => setFormStatistik({ ...formStatistik, kategori: val })}
+										options={[
+											{ value: 'Keagamaan', label: 'Keagamaan' },
+											{ value: 'Pendidikan', label: 'Pendidikan' },
+											{ value: 'Layanan KUA', label: 'Layanan KUA' },
+											{ value: 'PPID', label: 'PPID' },
+											{ value: 'Bimmas Islam', label: 'Bimmas Islam' },
+											{ value: 'Haji & Umrah', label: 'Haji & Umrah' },
+										]}
+										placeholder="Pilih Kategori Sektor..."
+									/>
 								</div>
 
 								<div>
@@ -861,17 +865,18 @@ export default function DataInformasiSection() {
 									<div className="grid grid-cols-2 gap-3">
 										<div>
 											<label className={labelCls}>Kategori Sektor *</label>
-											<select
+											<ModernSelect
 												value={formInfografis.kategori}
-												onChange={(e) => setFormInfografis({ ...formInfografis, kategori: e.target.value })}
-												className={inputCls}
-											>
-												<option value="Keagamaan">Keagamaan</option>
-												<option value="Pendidikan">Pendidikan</option>
-												<option value="Layanan KUA">Layanan KUA</option>
-												<option value="Haji &amp; Umrah">Haji &amp; Umrah</option>
-												<option value="Layanan Publik">Layanan Publik</option>
-											</select>
+												onChange={(val) => setFormInfografis({ ...formInfografis, kategori: val })}
+												options={[
+													{ value: 'Keagamaan', label: 'Keagamaan' },
+													{ value: 'Pendidikan', label: 'Pendidikan' },
+													{ value: 'Layanan KUA', label: 'Layanan KUA' },
+													{ value: 'Haji & Umrah', label: 'Haji & Umrah' },
+													{ value: 'Layanan Publik', label: 'Layanan Publik' },
+												]}
+												placeholder="Pilih Kategori Sektor..."
+											/>
 										</div>
 
 										<div>

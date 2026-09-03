@@ -125,3 +125,16 @@ func (h *Handler) UpdateStatus(c fiber.Ctx) error {
 	}
 	return platform.OKMessage(c, fiber.StatusOK, "Status permohonan diperbarui.")
 }
+
+// Delete removes a request ticket permanently from database (admin only).
+func (h *Handler) Delete(c fiber.Ctx) error {
+	id := c.Params("id")
+	if !platform.ValidUUID(id) {
+		return platform.Fail(c, platform.NotFoundf("Permohonan tidak ditemukan."))
+	}
+
+	if err := h.svc.Delete(c.Context(), id); err != nil {
+		return platform.Fail(c, err)
+	}
+	return platform.OKMessage(c, fiber.StatusOK, "Permohonan berhasil dihapus permanen.")
+}

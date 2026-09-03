@@ -25,7 +25,7 @@ const siteTitle = exactTitle ? title : (title === defaultTitle ? title : `${titl
 const currentPath = Astro.url.pathname;
 const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'https://ppid.kemenag-baritoutara.com';
 const canonicalUrl = new URL(currentPath, siteUrl).toString();
-const ogImageUrl = `${siteUrl}/hapakat.png`;
+const ogImageUrl = `${siteUrl}/og-image.png`;
 const logoUrl = `${siteUrl}/logo-kemenag.svg`;
 const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN ?? '';
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-C6T6QLCCVB';
@@ -38,6 +38,32 @@ const shouldHideWidgets =
 	currentPath.startsWith('/pusdatin') ||
 	currentPath === '/404' ||
 	currentPath.startsWith('/404');
+
+// Dynamic Enterprise BreadcrumbList for Google Search Rich Snippets
+const pathSegments = currentPath.split('/').filter(Boolean);
+const breadcrumbItems = [
+	{
+		'@type': 'ListItem',
+		position: 1,
+		name: 'Beranda',
+		item: siteUrl,
+	},
+];
+
+let accumulatedPath = '';
+pathSegments.forEach((segment, index) => {
+	accumulatedPath += `/${segment}`;
+	const formattedName = segment
+		.split('-')
+		.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+		.join(' ');
+	breadcrumbItems.push({
+		'@type': 'ListItem',
+		position: index + 2,
+		name: formattedName,
+		item: `${siteUrl}${accumulatedPath}`,
+	});
+});
 
 const structuredData = {
 	'@context': 'https://schema.org',
@@ -55,6 +81,11 @@ const structuredData = {
 			},
 			image: ogImageUrl,
 			description: description,
+			parentOrganization: {
+				'@type': 'GovernmentOrganization',
+				name: 'Kementerian Agama Republik Indonesia',
+				url: 'https://kemenag.go.id',
+			},
 			address: {
 				'@type': 'PostalAddress',
 				streetAddress: 'Jl. A. Yani No. 85, Lanjas, Muara Teweh',
@@ -63,23 +94,62 @@ const structuredData = {
 				postalCode: '73814',
 				addressCountry: 'ID',
 			},
+			geo: {
+				'@type': 'GeoCoordinates',
+				latitude: -0.9634,
+				longitude: 114.8968,
+			},
+			openingHoursSpecification: [
+				{
+					'@type': 'OpeningHoursSpecification',
+					dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+					opens: '07:30',
+					closes: '16:00',
+				},
+				{
+					'@type': 'OpeningHoursSpecification',
+					dayOfWeek: ['Friday'],
+					opens: '07:30',
+					closes: '16:30',
+				},
+			],
 			contactPoint: {
 				'@type': 'ContactPoint',
 				telephone: '+62-538-21045',
 				contactType: 'customer support',
 				availableLanguage: ['Indonesian'],
 			},
+			sameAs: [
+				'https://kemenag.go.id',
+				'https://kalteng.kemenag.go.id',
+				'https://www.facebook.com/kemenagbaritoutara',
+				'https://www.instagram.com/kemenag_barut',
+			],
 		},
 		{
 			'@type': 'WebSite',
 			'@id': `${siteUrl}/#website`,
 			url: siteUrl,
 			name: 'Portal PPID Kemenag Barito Utara',
+			alternateName: 'PPID Kemenag Barito Utara Online',
 			description: description,
 			publisher: {
 				'@id': `${siteUrl}/#organization`,
 			},
 			inLanguage: 'id-ID',
+			potentialAction: {
+				'@type': 'SearchAction',
+				target: {
+					'@type': 'EntryPoint',
+					urlTemplate: `${siteUrl}/informasi-publik/berkala?q={search_term_string}`,
+				},
+				'query-input': 'required name=search_term_string',
+			},
+		},
+		{
+			'@type': 'BreadcrumbList',
+			'@id': `${canonicalUrl}#breadcrumb`,
+			itemListElement: breadcrumbItems,
 		},
 	],
 };
@@ -98,8 +168,16 @@ const structuredData = {
 			content="PPID, PPID Kemenag, Kemenag Barito Utara, Kementerian Agama Barito Utara, Layanan Informasi Publik, Permohonan Informasi Online, Muara Teweh, Kalteng, Regulasi PPID, Informasi Berkala, Keterbukaan Informasi Publik, UU KIP"
 		/>
 		<meta name="author" content="PPID Kantor Kementerian Agama Kabupaten Barito Utara" />
-		<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+		<meta name="robots" content={shouldHideWidgets ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+		<meta name="googlebot" content={shouldHideWidgets ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'} />
+		<meta name="bingbot" content={shouldHideWidgets ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'} />
 		<link rel="canonical" href={canonicalUrl} />
+
+		<!-- Local Government Geo SEO -->
+		<meta name="geo.region" content="ID-KT" />
+		<meta name="geo.placename" content="Muara Teweh, Kabupaten Barito Utara, Kalimantan Tengah" />
+		<meta name="geo.position" content="-0.9634;114.8968" />
+		<meta name="ICBM" content="-0.9634, 114.8968" />
 
 		<!-- 1. Resource Hints & Priority Hints -->
 		<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
@@ -114,19 +192,33 @@ const structuredData = {
 		<link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 		<link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
 		<link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
+		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 		<link rel="preload" href="/logo-kemenag.svg" as="image" type="image/svg+xml" fetchpriority="high" />
 
-		<!-- 2. Typography: Google Font API Plus Jakarta Sans -->
+		<!-- 2. Typography: Google Font API Plus Jakarta Sans (Non-render-blocking) -->
+		<link
+			rel="preload"
+			as="style"
+			href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+		/>
 		<link
 			href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap"
 			rel="stylesheet"
+			media="print"
+			onload="this.media='all'"
 		/>
+		<noscript>
+			<link
+				href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+				rel="stylesheet"
+			/>
+		</noscript>
 
 		<!-- 3. PWA & Mobile Web Capabilities -->
 		<link rel="manifest" href="/site.webmanifest" />
 		<link rel="icon" type="image/svg+xml" href="/logo-kemenag.svg" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="apple-touch-icon" href="/logo-kemenag.svg" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<meta name="application-name" content="PPID Kemenag Barut" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -359,6 +451,13 @@ const structuredData = {
 					})
 					.catch(function () {});
 			})();
+
+			// Register PWA Service Worker
+			if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+				window.addEventListener('load', function () {
+					navigator.serviceWorker.register('/sw.js').catch(function () {});
+				});
+			}
 		</script>
 		<slot name="head" />
 	</head>

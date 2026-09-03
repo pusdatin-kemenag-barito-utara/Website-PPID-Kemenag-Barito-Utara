@@ -343,7 +343,7 @@ export default function Navbar({ currentPath = "" }: NavbarProps) {
             >
               <Search className="h-4 w-4" />
               <span>Cari Informasi...</span>
-              <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground bg-accent rounded border border-border/60 ml-1">
+              <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-foreground/80 dark:text-foreground/90 bg-muted/90 rounded border border-border/80 ml-1">
                 Ctrl K
               </kbd>
             </button>

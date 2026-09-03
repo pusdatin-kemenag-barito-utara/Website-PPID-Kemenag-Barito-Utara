@@ -307,7 +307,7 @@ export default function LacakTiketModal() {
 				}}
 				className="inline-flex items-center justify-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[#007144]/30 bg-emerald-500/10 hover:bg-[#007144] text-[#007144] hover:text-white text-xs font-bold transition-all active:scale-[0.98] cursor-pointer shadow-2xs group"
 				title="Lacak Status Permohonan / Tiket"
-				aria-label="Lacak Status Tiket"
+				aria-label="Lacak Tiket"
 			>
 				<Ticket className="w-4 h-4 sm:w-3.5 sm:h-3.5 transition-transform group-hover:rotate-12 shrink-0" />
 				<span className="hidden sm:inline whitespace-nowrap">Lacak Tiket</span>

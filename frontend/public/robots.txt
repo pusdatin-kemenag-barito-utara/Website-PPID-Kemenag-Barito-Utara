@@ -1,9 +1,50 @@
-# Robots.txt for PPID Kementerian Agama Kabupaten Barito Utara
+# ==============================================================================
+# Robots.txt - Portal Resmi PPID Kementerian Agama Kabupaten Barito Utara
+# Domain: https://ppid.kemenag-baritoutara.com
+# ==============================================================================
+
 User-agent: *
+Allow: /
+Allow: /_astro/
+Allow: /favicon.svg
+Allow: /logo-kemenag.svg
+Allow: /hapakat.png
+Allow: /og-image.png
+Allow: /icon-192.png
+Allow: /icon-512.png
+
+# Protect Private Admin Dashboards & APIs from Crawling
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /pusdatin/
+Disallow: /pusdatin/*
+Disallow: /api/
+Disallow: /api/*
+Disallow: /maintenance
+Disallow: /404
+
+# Specialized Search Engine Bots (Full Indexing of Public Information)
+User-agent: Googlebot
 Allow: /
 Disallow: /admin/
 Disallow: /pusdatin/
 Disallow: /api/
 
-# Sitemap
+User-agent: Googlebot-Image
+Allow: /
+Allow: /_astro/
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.svg$
+Allow: /*.webp$
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /pusdatin/
+Disallow: /api/
+
+# Canonical Sitemap Index & Host
 Sitemap: https://ppid.kemenag-baritoutara.com/sitemap.xml
+Host: https://ppid.kemenag-baritoutara.com

@@ -151,3 +151,8 @@ func (s *PermohonanService) UpdateStatus(ctx context.Context, id, status string)
 	}
 	return s.repo.UpdateStatus(ctx, id, status)
 }
+
+// Delete permanently removes a request ticket and its cascaded notifications from database (admin only).
+func (s *PermohonanService) Delete(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}

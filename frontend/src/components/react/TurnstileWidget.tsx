@@ -47,9 +47,13 @@ export default function TurnstileWidget({
 	useEffect(() => {
 		if (!siteKey) return;
 		let disposed = false;
+		let pollTimer: ReturnType<typeof setInterval> | null = null;
+		let attempts = 0;
 
-		const render = () => {
-			if (disposed || widgetIdRef.current || !containerRef.current || !window.turnstile) return;
+		const tryRender = (): boolean => {
+			if (disposed || widgetIdRef.current || !containerRef.current || !window.turnstile?.render) {
+				return false;
+			}
 			try {
 				if (containerRef.current) {
 					containerRef.current.innerHTML = '';
@@ -62,45 +66,57 @@ export default function TurnstileWidget({
 					sitekey: siteKey,
 					theme: resolvedTheme,
 					size: size,
-					callback: (token) => onTokenRef.current?.(token),
-					'expired-callback': () => onTokenRef.current?.(''),
-					'error-callback': () => {
-						if (widgetIdRef.current && window.turnstile) {
-							try {
-								window.turnstile.reset(widgetIdRef.current);
-							} catch {}
+					callback: (token) => {
+						if (!disposed) {
+							onTokenRef.current?.(token);
 						}
+					},
+					'expired-callback': () => {
+						if (!disposed) {
+							onTokenRef.current?.('');
+						}
+					},
+					'error-callback': (err) => {
+						console.warn('[Cloudflare Turnstile] Challenge error:', err);
 						onTokenRef.current?.('');
 					},
 				});
+				return true;
 			} catch (err) {
-				console.warn('[Cloudflare Turnstile] Render error:', err);
+				console.warn('[Cloudflare Turnstile] Render exception:', err);
+				return false;
 			}
 		};
 
-		const runWhenReady = () => {
-			if (window.turnstile) {
-				render();
-				return;
-			}
-			const existing = document.querySelector('script[src*="turnstile/v0/api.js"]');
-			if (existing) {
-				existing.addEventListener('load', render);
-				return;
-			}
+		const startPolling = () => {
+			if (tryRender()) return;
+			pollTimer = setInterval(() => {
+				attempts++;
+				if (tryRender() || attempts > 60) {
+					if (pollTimer) clearInterval(pollTimer);
+				}
+			}, 100);
+		};
+
+		// Ensure the script tag is added
+		const existingScript = document.querySelector('script[src*="turnstile/v0/api.js"]');
+		if (!existingScript) {
 			const script = document.createElement('script');
 			script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 			script.async = true;
 			script.defer = true;
-			script.onload = render;
+			script.onload = () => {
+				startPolling();
+			};
 			document.head.appendChild(script);
-		};
-
-		runWhenReady();
+		} else {
+			startPolling();
+		}
 
 		return () => {
 			disposed = true;
-			if (widgetIdRef.current && window.turnstile) {
+			if (pollTimer) clearInterval(pollTimer);
+			if (widgetIdRef.current && window.turnstile?.remove) {
 				try {
 					window.turnstile.remove(widgetIdRef.current);
 				} catch {}

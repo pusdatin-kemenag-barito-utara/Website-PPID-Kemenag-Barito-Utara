@@ -506,11 +506,13 @@ export function ModernSelect({
 	onChange,
 	options,
 	placeholder = 'Pilih salah satu...',
+	className = '',
 }: {
 	value: string;
 	onChange: (val: string) => void;
 	options: SelectOption[] | { value: string; label: string }[];
 	placeholder?: string;
+	className?: string;
 }) {
 	const [isOpen, setIsOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -530,7 +532,7 @@ export function ModernSelect({
 	}, [isOpen]);
 
 	return (
-		<div className="relative w-full" ref={containerRef}>
+		<div className={cn('relative', className || 'w-full')} ref={containerRef}>
 			<button
 				type="button"
 				onClick={() => setIsOpen(!isOpen)}
