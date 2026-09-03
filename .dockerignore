@@ -1,0 +1,11 @@
+node_modules
+.git
+.vscode
+.idea
+.astro
+dist
+tmp
+bin
+.env*
+*.log*
+ppid_pgdata
