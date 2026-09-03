@@ -5,6 +5,8 @@ FROM golang:1.24-alpine AS go-builder
 
 WORKDIR /app/backend
 
+ENV GOTOOLCHAIN=auto
+
 RUN apk add --no-cache git ca-certificates tzdata
 
 COPY backend/go.mod backend/go.sum ./
