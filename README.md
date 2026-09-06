@@ -27,6 +27,20 @@ Situs layanan informasi publik Kemenag Barito Utara. Monorepo dengan arsitektur:
 └── docker-compose.yml     # PostgreSQL lokal
 ```
 
+## Instalasi Dependensi
+
+Untuk menginstal seluruh dependensi (root, frontend Astro, dan backend Go) sekaligus:
+
+```powershell
+npm run install:all
+```
+
+Atau secara terpisah:
+```powershell
+npm run install:fe   # Frontend saja
+npm run install:be   # Backend Go modules saja
+```
+
 ## Menjalankan Development
 
 Prasyarat: Go 1.26+, Node.js >= 22.12, dan PostgreSQL (atau `docker compose up -d`).

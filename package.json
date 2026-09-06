@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
+    "postinstall": "npm --prefix frontend install",
+    "install:all": "npm install && npm run install:be",
+    "install:fe": "npm --prefix frontend install",
+    "install:be": "go -C backend mod download",
+    "install:frontend": "npm run install:fe",
+    "install:backend": "npm run install:be",
+    "install:web": "npm run install:fe",
+    "install:api": "npm run install:be",
     "dev": "concurrently -k -n FE,BE -c blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
     "dev:fe": "npm --prefix frontend run dev",
     "dev:be": "npm --prefix backend run dev"
