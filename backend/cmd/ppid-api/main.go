@@ -62,6 +62,8 @@ func main() {
 		AppName:            cfg.AppName,
 		EnableIPValidation: true,
 		ProxyHeader:        "CF-Connecting-IP",
+		ReadBufferSize:     32 * 1024,
+		WriteBufferSize:    32 * 1024,
 	})
 
 	app.Use(recover.New())

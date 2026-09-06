@@ -13,12 +13,18 @@ export async function getAdminUser(origin: string, cookieHeader: string): Promis
 	}
 
 	try {
+		const cleanCookie = cookieHeader
+			.split(';')
+			.map((c) => c.trim())
+			.filter((c) => c.startsWith('ppid_'))
+			.join('; ');
+
 		// Inside the container, direct communication to Go backend port 8080 avoids external DNS loopback issues
 		const rawUpstream = process.env.API_UPSTREAM_URL || 'http://127.0.0.1:8080';
 		const upstream = rawUpstream.replace('://backend:', '://127.0.0.1:');
 
 		let res = await fetch(`${upstream}/api/v1/auth/me`, {
-			headers: { cookie: cookieHeader, accept: 'application/json' },
+			headers: { cookie: cleanCookie, accept: 'application/json' },
 			signal: AbortSignal.timeout(3000),
 		}).catch(() => null);
 

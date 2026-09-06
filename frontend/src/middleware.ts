@@ -139,8 +139,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			const value = context.request.headers.get(name);
 			if (value) headers.set(name, value);
 		}
-		const cookie = context.request.headers.get('cookie');
-		if (cookie) headers.set('cookie', cookie);
+		const rawCookie = context.request.headers.get('cookie');
+		if (rawCookie) {
+			const relevantCookies = rawCookie
+				.split(';')
+				.map((c) => c.trim())
+				.filter((c) => c.startsWith('ppid_'));
+			if (relevantCookies.length > 0) {
+				headers.set('cookie', relevantCookies.join('; '));
+			}
+		}
 
 		const init: RequestInit = { method: context.request.method, headers, redirect: 'manual' };
 		if (!['GET', 'HEAD'].includes(context.request.method)) {
