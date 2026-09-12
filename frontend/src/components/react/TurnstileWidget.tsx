@@ -127,10 +127,16 @@ export default function TurnstileWidget({
 
 	if (!siteKey) return null;
 
+	const isFlexible = size === 'flexible';
+
 	return (
 		<div
 			ref={containerRef}
-			className={`min-h-[65px] flex items-center justify-center [&>iframe]:mx-auto [&>div]:mx-auto ${className}`}
+			className={`min-h-[65px] w-full flex items-center ${
+				isFlexible
+					? 'justify-stretch [&>div]:w-full! [&>iframe]:w-full! [&>div]:max-w-full [&>iframe]:max-w-full'
+					: 'justify-center [&>iframe]:mx-auto [&>div]:mx-auto'
+			} ${className}`}
 		/>
 	);
 }

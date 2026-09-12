@@ -1,19 +1,19 @@
 # dependencies
 node_modules/
+**/node_modules/
 
-# Astro (frontend)
+# Astro & Frontend build artifacts
 frontend/dist/
 frontend/.astro/
+dist/
+build/
+.cache/
+.turbo/
 
 # testing & reports
 coverage/
 test-results/
 playwright-report/
-
-# build artifacts
-build/
-.cache/
-.turbo/
 
 # misc & OS
 .DS_Store
@@ -26,9 +26,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment files
+# environment & secret files (full centralization in Infisical)
 .env*
-!.env.example
+.infisical/
 
 # Go (backend)
 backend/bin/
@@ -36,6 +36,12 @@ backend/vendor/
 backend/tmp/
 *.exe
 *.test
+ppid-api
+backend/ppid-api
+
+# Local uploads & file storage
+uploads/
+**/uploads/
 
 # IDE & Editor settings
 .vscode/

@@ -59,9 +59,9 @@ Invoke-RestMethod http://localhost:8080/api/v1/health
 .\dev-stop.ps1
 ```
 
-Variabel lingkungan dimuat dari `.env.local` di root (lihat `backend/.env.example`
-untuk daftar variabel yang didukung). File `.env.local` berisi secret dan tidak
-di-commit (di-ignore oleh `.gitignore`).
+Seluruh variabel lingkungan dikelola terpusat di **Infisical Cloud** (folder `/ppid-kemenag`)
+dan otomatis disuntikkan (*injected*) saat menjalankan perintah `npm run dev` atau saat
+container berjalan via Universal Auth. Tidak memerlukan file `.env` lokal.
 
 ## Menjalankan secara terpisah
 
@@ -85,6 +85,6 @@ cd frontend; npm run build
 
 ## Dokumentasi
 
-- Konfigurasi backend: `backend/.env.example`
+- Integrasi Secrets & Envs: Menggunakan Infisical Cloud (`/ppid-kemenag`)
 - Panduan pengembangan frontend: `frontend/AGENTS.md`
 - Pemetaan migrasi & daftar rute: `backend/docs/MIGRATION_MAP.md`

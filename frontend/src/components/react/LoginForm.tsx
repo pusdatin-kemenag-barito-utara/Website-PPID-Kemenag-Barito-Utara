@@ -150,9 +150,15 @@ export default function LoginForm({ siteKey }: Props) {
 					</label>
 				</div>
 
-				{/* Cloudflare Turnstile Security CAPTCHA (Centered) */}
-				<div className="w-full flex items-center justify-center py-1">
-					<TurnstileWidget key={turnstileKey} siteKey={siteKey} onToken={setTurnstileToken} size="normal" className="w-full justify-center" />
+				{/* Cloudflare Turnstile Security CAPTCHA (Full Width matching Submit Button) */}
+				<div className="w-full py-1">
+					<TurnstileWidget
+						key={turnstileKey}
+						siteKey={siteKey}
+						onToken={setTurnstileToken}
+						size="flexible"
+						className="w-full"
+					/>
 				</div>
 
 				{/* Tombol Submit */}

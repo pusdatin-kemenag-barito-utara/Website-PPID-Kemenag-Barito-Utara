@@ -11,9 +11,11 @@
     "install:backend": "npm run install:be",
     "install:web": "npm run install:fe",
     "install:api": "npm run install:be",
-    "dev": "concurrently -k -n FE,BE -c blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
-    "dev:fe": "npm --prefix frontend run dev",
-    "dev:be": "npm --prefix backend run dev"
+    "dev": "infisical run --env=dev --path=/ppid-kemenag -- concurrently -k -n FE,BE -c blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
+    "dev:prod": "infisical run --env=prod --path=/ppid-kemenag -- concurrently -k -n FE,BE -c blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
+    "dev:fe": "infisical run --env=dev --path=/ppid-kemenag -- npm --prefix frontend run dev",
+    "dev:be": "infisical run --env=dev --path=/ppid-kemenag -- npm --prefix backend run dev",
+    "dev:raw": "concurrently -k -n FE,BE -c blue,green \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\""
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

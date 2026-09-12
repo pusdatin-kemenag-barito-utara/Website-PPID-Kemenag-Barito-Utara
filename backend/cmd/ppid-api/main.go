@@ -121,7 +121,7 @@ func main() {
 	sopHandler := sophandler.NewHandler(sopSvc)
 
 	fileStore := storage.New(cfg)
-	storageHandler := storagehandler.NewHandler(fileStore)
+	storageHandler := storagehandler.NewHandler(fileStore, cfg.R2PublicBaseURL)
 
 	systemRepo := repository.NewSystemRepository(pool)
 	systemSvc := service.NewSystemService(systemRepo, cfg)

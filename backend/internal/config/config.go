@@ -45,7 +45,7 @@ func Load() *Config {
 		Env:                getEnv("APP_ENV", "development"),
 		AppName:            getEnv("APP_NAME", "ppid-kemenag-api"),
 		DatabaseURL:        os.Getenv("DATABASE_URL"),
-		JWTSecret:          getEnv("JWT_SECRET", "dev-only-insecure-secret"),
+		JWTSecret:          os.Getenv("JWT_SECRET"),
 		JWTExpiresMinute:   getEnvInt("JWT_EXPIRES_MINUTES", 480),
 		TurnstileSiteKey:   getEnv("PUBLIC_TURNSTILE_SITE_KEY", os.Getenv("TURNSTILE_SITE_KEY")),
 		TurnstileSecretKey: os.Getenv("TURNSTILE_SECRET_KEY"),
@@ -54,12 +54,12 @@ func Load() *Config {
 		R2SecretKey:        os.Getenv("R2_SECRET_ACCESS_KEY"),
 		R2BucketName:       os.Getenv("R2_BUCKET_NAME"),
 		R2PublicBaseURL:    os.Getenv("R2_PUBLIC_BASE_URL"),
-		PusdatinURL:        getEnv("PUSDATIN_URL", "https://pusdatin.kemenag-baritoutara.com"),
-		PusdatinAppID:      getEnv("PUSDATIN_APP_ID", "ppid_kemenag_barito_utara"),
+		PusdatinURL:        os.Getenv("PUSDATIN_URL"),
+		PusdatinAppID:      os.Getenv("PUSDATIN_APP_ID"),
 		WABotWebhookURL:    os.Getenv("WA_BOT_WEBHOOK_URL"),
 		AdminEmail:         os.Getenv("ADMIN_EMAIL"),
 		AdminPassword:      os.Getenv("ADMIN_PASSWORD"),
-		AdminFullName:      getEnv("ADMIN_FULL_NAME", "Administrator PPID"),
+		AdminFullName:      os.Getenv("ADMIN_FULL_NAME"),
 	}
 }
 

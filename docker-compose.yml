@@ -28,12 +28,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    env_file:
-      - .env.local
     environment:
       PORT: "8080"
       APP_ENV: production
-      DATABASE_URL: ${DATABASE_URL:-postgres://ppid:ppid@postgres:5432/ppid_kemenag?sslmode=disable}
+      DATABASE_URL: ${DATABASE_URL}
     ports:
       - "127.0.0.1:8080:8080"
     networks:
@@ -47,8 +45,6 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    env_file:
-      - .env.local
     environment:
       HOST: "0.0.0.0"
       PORT: "3000"

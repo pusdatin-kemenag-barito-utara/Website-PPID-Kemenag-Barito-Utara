@@ -22,12 +22,16 @@ var allowedExts = map[string]bool{
 
 // Handler is the HTTP layer for file storage (berkas publik).
 type Handler struct {
-	store storage.Storage
+	store         storage.Storage
+	publicBaseURL string
 }
 
 // NewHandler creates a storage Handler.
-func NewHandler(store storage.Storage) *Handler {
-	return &Handler{store: store}
+func NewHandler(store storage.Storage, publicBaseURL string) *Handler {
+	return &Handler{
+		store:         store,
+		publicBaseURL: strings.TrimSuffix(publicBaseURL, "/"),
+	}
 }
 
 // Upload receives a multipart file and returns its public URL (admin only).
@@ -110,12 +114,12 @@ func (h *Handler) Stream(c fiber.Ctx) error {
 	}
 
 	// Resilient fallback: If S3 GetObject failed, fetch directly from public CDN URL
-	if err != nil || len(data) == 0 {
+	if (err != nil || len(data) == 0) && h.publicBaseURL != "" {
 		cdnKey := cleanKey
 		if !strings.HasPrefix(cdnKey, "ppid/") {
 			cdnKey = "ppid/" + cdnKey
 		}
-		cdnUrl := fmt.Sprintf("https://files.kemenag-baritoutara.com/%s", cdnKey)
+		cdnUrl := fmt.Sprintf("%s/%s", h.publicBaseURL, cdnKey)
 		req, reqErr := http.NewRequestWithContext(c.Context(), http.MethodGet, cdnUrl, nil)
 		if reqErr == nil {
 			resp, httpErr := http.DefaultClient.Do(req)

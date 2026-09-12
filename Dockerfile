@@ -22,27 +22,6 @@ FROM node:22-alpine AS fe-builder
 
 WORKDIR /app/frontend
 
-# Build args from Coolify for compile-time Astro envs
-ARG PUBLIC_SITE_URL
-ARG NEXT_PUBLIC_SITE_URL
-ARG PUBLIC_API_BASE_URL
-ARG PUBLIC_TURNSTILE_SITE_KEY
-ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
-ARG PUSDATIN_URL
-ARG NEXT_PUBLIC_PUSDATIN_URL
-ARG PUBLIC_GA_MEASUREMENT_ID
-ARG PUBLIC_GTAG_ID
-
-ENV PUBLIC_SITE_URL=${PUBLIC_SITE_URL:-https://ppid.kemenag-baritoutara.com} \
-    NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-https://ppid.kemenag-baritoutara.com} \
-    PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-/api/v1} \
-    PUBLIC_TURNSTILE_SITE_KEY=${PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAADR1O_LSp1lgc3km} \
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-0x4AAAAAADR1O_LSp1lgc3km} \
-    PUSDATIN_URL=${PUSDATIN_URL:-https://pusdatin.kemenag-baritoutara.com} \
-    NEXT_PUBLIC_PUSDATIN_URL=${NEXT_PUBLIC_PUSDATIN_URL:-https://pusdatin.kemenag-baritoutara.com} \
-    PUBLIC_GA_MEASUREMENT_ID=${PUBLIC_GA_MEASUREMENT_ID:-G-C6T6QLCCVB} \
-    PUBLIC_GTAG_ID=${PUBLIC_GTAG_ID:-GT-TB7R87XG}
-
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
@@ -56,7 +35,9 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata curl wget bash
+RUN apk add --no-cache ca-certificates tzdata curl wget bash && \
+    curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.alpine.sh' | bash && \
+    apk add --no-cache infisical
 
 # Copy Go backend binary
 COPY --from=go-builder /app/ppid-api /app/ppid-api
@@ -71,9 +52,11 @@ COPY --from=fe-builder /app/frontend/public ./public
 
 WORKDIR /app
 
-# Copy entrypoint script and ensure Linux line endings
+# Copy entrypoint and start script, ensuring Linux line endings
 COPY start.sh /app/start.sh
-RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh && \
+    sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
@@ -82,4 +65,5 @@ ENV NODE_ENV=production \
 
 EXPOSE 3000
 
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/bash", "/app/start.sh"]
