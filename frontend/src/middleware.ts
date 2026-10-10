@@ -175,6 +175,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 			const responseHeaders = new Headers(upstreamRes.headers);
 			responseHeaders.delete('content-length');
+			responseHeaders.delete('content-encoding');
+			responseHeaders.delete('transfer-encoding');
 
 			// If logout endpoint, explicitly enforce deleting HttpOnly auth cookie
 			if (url.pathname.endsWith('/auth/logout')) {

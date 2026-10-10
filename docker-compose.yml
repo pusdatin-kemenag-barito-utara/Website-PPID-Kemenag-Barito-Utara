@@ -1,37 +1,17 @@
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: ppid-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ppid_kemenag}
-      POSTGRES_USER: ${POSTGRES_USER:-ppid}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ppid}
-    ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - ppid_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ppid} -d ${POSTGRES_DB:-ppid_kemenag}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ppid-network
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: ppid-backend
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       PORT: "8080"
-      APP_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
+      APP_ENV: ${APP_ENV}
+      POCKETBASE_URL: ${POCKETBASE_URL}
+      POCKETBASE_ADMIN_EMAIL: ${POCKETBASE_ADMIN_EMAIL}
+      POCKETBASE_ADMIN_PASSWORD: ${POCKETBASE_ADMIN_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "127.0.0.1:8080:8080"
     networks:
@@ -58,6 +38,3 @@ services:
 networks:
   ppid-network:
     driver: bridge
-
-volumes:
-  ppid_pgdata:

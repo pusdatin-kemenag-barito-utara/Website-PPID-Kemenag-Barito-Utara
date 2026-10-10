@@ -13,7 +13,7 @@ type TabType = 'formulir' | 'alasan' | 'sengketa';
 export default function KeberatanContainer({
 	alasanKeberatan,
 	prosedurSengketa,
-	siteKey = '0x4AAAAAADR1O_LSp1lgc3km',
+	siteKey = '',
 }: KeberatanContainerProps) {
 	const [activeTab, setActiveTab] = useState<TabType>('formulir');
 

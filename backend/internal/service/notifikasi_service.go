@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -64,19 +65,34 @@ func (s *NotifikasiService) Send(ctx context.Context, in SendInput) (*model.Noti
 	}
 
 	status := modelStatusDelivered()
-	if s.webhook != "" {
-		if err := s.pushWebhook(ctx, p, in.Channel, in.Pesan); err != nil {
-			return nil, platform.NewError(platform.ErrInternal, "Gagal mengirim notifikasi: gateway tidak merespons.")
-		}
-	}
-
-	return s.repo.Create(ctx, &model.Notifikasi{
+	dto, err := s.repo.Create(ctx, &model.Notifikasi{
 		PermohonanID: p.ID,
 		Channel:      in.Channel,
 		Penerima:     receiver,
 		Pesan:        in.Pesan,
 		Status:       status,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Dispatch external webhook delivery asynchronously in background worker to ensure instant HTTP response
+	if s.webhook != "" {
+		permCopy := *p
+		channel := in.Channel
+		pesan := in.Pesan
+		go func() {
+			bgCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			if pushErr := s.pushWebhook(bgCtx, &permCopy, channel, pesan); pushErr != nil {
+				log.Printf("[notifikasi-worker] warning: background webhook push failed for tiket %s: %v", permCopy.TiketNo, pushErr)
+			} else {
+				log.Printf("[notifikasi-worker] successfully delivered webhook notification for tiket %s", permCopy.TiketNo)
+			}
+		}()
+	}
+
+	return dto, nil
 }
 
 // History returns past notification attempts for a permohonan.

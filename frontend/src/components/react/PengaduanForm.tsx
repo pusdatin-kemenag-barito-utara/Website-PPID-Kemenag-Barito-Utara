@@ -44,7 +44,7 @@ interface PengaduanFormProps {
 }
 
 export default function PengaduanForm({
-	siteKey = '0x4AAAAAADR1O_LSp1lgc3km',
+	siteKey = '',
 }: PengaduanFormProps) {
 	const [submitted, setSubmitted] = useState(false);
 	const [regNumber, setRegNumber] = useState('');

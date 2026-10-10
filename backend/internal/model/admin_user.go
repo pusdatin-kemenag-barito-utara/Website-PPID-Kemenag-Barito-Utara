@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// AdminUser is the go-native auth principal (replaces Supabase/pusdatin auth).
+// AdminUser represents an authenticated admin principal in PocketBase.
 type AdminUser struct {
 	ID           string
 	Email        string

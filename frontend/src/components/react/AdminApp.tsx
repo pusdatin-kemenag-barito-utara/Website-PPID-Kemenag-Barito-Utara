@@ -626,7 +626,7 @@ export default function AdminApp({ page, userEmail, userFullName }: Props) {
                     Super Admin
                   </p>
                   <p className="text-[10px] text-muted-foreground truncate max-w-[150px] hidden sm:block">
-                    {userEmail || "baritoutara@kemenag.go.id"}
+                    {userEmail || "Admin"}
                   </p>
                 </div>
                 <ChevronDown
@@ -644,7 +644,7 @@ export default function AdminApp({ page, userEmail, userFullName }: Props) {
                       Super Admin
                     </p>
                     <p className="text-[10px] text-muted-foreground truncate">
-                      {userEmail || "baritoutara@kemenag.go.id"}
+                      {userEmail || "Admin"}
                     </p>
                   </div>
                   <button

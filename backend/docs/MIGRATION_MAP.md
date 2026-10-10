@@ -1,7 +1,7 @@
 # MIGRATION_MAP — PPID Kemenag Barito Utara
 
-Peta inventori & status migrasi dari sistem lama (Next.js 16 + Supabase + localStorage)
-ke sistem baru (Astro 7 + React di `frontend/`, Go Fiber v3 + PostgreSQL di `backend/`).
+Peta inventori & status migrasi dari sistem lama (Next.js 16 + localStorage)
+ke sistem baru (Astro 7 + React di `frontend/`, Go Fiber v3 + PocketBase di `backend/`).
 
 > Dokumen ini adalah **kontrak**. Setiap modul dicentang hanya setelah terverifikasi end-to-end.
 
@@ -90,7 +90,7 @@ Custom events lama (dipertahankan antar-island baru):
 
 | Tabel | Sumber | Catatan |
 |---|---|---|
-| `admin_users` | BARU (Go-native) | bcrypt + JWT, ganti auth Supabase/pusdatin cross-schema |
+| `admin_users` | BARU (Go-native) | bcrypt + JWT, ganti auth legacy/pusdatin cross-schema |
 | `informasi_publik` | lama (schema.ts) | + kolom `download_url` |
 | `regulasi` | BARU | dari `useRegulasiStore` |
 | `profil_instansi` | lama + store | gabung sejarah/visi/tugas/strategi |
@@ -125,8 +125,8 @@ Custom events lama (dipertahankan antar-island baru):
 
 | Lama | Baru | Keterangan |
 |---|---|---|
-| `DATABASE_URL` / `DIRECT_URL` | `DATABASE_URL` → `backend` | pgxpool |
-| `SUPABASE_URL/ANON/SERVICE_ROLE` | — | **DIBUANG** (auth go-native) |
+| `DATABASE_URL` / `DIRECT_URL` | `POCKETBASE_URL` → `backend` | PocketBase API client |
+| `LEGACY_DB_URL/ANON/SERVICE_ROLE` | — | **DIBUANG** (auth go-native) |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | `TURNSTILE_SITE_KEY` | BE verifikasi |
 | `TURNSTILE_SECRET_KEY` | `TURNSTILE_SECRET_KEY` | |
 | `NEXT_PUBLIC_SITE_URL` | `PUBLIC_SITE_URL` | Astro |

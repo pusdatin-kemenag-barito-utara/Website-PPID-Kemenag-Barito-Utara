@@ -2,120 +2,153 @@ package repository
 
 import (
 	"context"
-	"strconv"
+	"fmt"
+	"strings"
+	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-
+	"github.com/kemenag/ppid-kemenag/backend/internal/cache"
 	"github.com/kemenag/ppid-kemenag/backend/internal/model"
 	"github.com/kemenag/ppid-kemenag/backend/internal/platform"
+	"github.com/kemenag/ppid-kemenag/backend/internal/pocketbase"
 )
 
-// RegulasiRepository persists regulasi documents.
+// RegulasiRepository persists regulasi documents in PocketBase.
 type RegulasiRepository struct {
-	pool *pgxpool.Pool
+	pb *pocketbase.Client
 }
 
-// NewRegulasiRepository creates a RegulasiRepository.
-func NewRegulasiRepository(pool *pgxpool.Pool) *RegulasiRepository {
-	return &RegulasiRepository{pool: pool}
+// NewRegulasiRepository creates a RegulasiRepository backed by PocketBase.
+func NewRegulasiRepository(pb *pocketbase.Client) *RegulasiRepository {
+	return &RegulasiRepository{pb: pb}
 }
 
-const regulasiColumns = `"id", "nomor", "tahun", "judul", "kategori", "tgl_terbit", "ukuran", "keterangan", "file_url", "is_aktif"`
-
-func scanRegulasi(row interface{ Scan(...any) error }) (*model.Regulasi, error) {
-	var i model.Regulasi
-	if err := row.Scan(&i.ID, &i.Nomor, &i.Tahun, &i.Judul, &i.Kategori, &i.TglTerbit, &i.Ukuran, &i.Keterangan, &i.FileURL, &i.IsAktif); err != nil {
-		return nil, err
+func mapToRegulasi(m map[string]interface{}) *model.Regulasi {
+	if m == nil {
+		return nil
 	}
-	return &i, nil
+	id, _ := m["id"].(string)
+	nomor, _ := m["nomor"].(string)
+	tahun, _ := m["tahun"].(string)
+	judul, _ := m["judul"].(string)
+	kategori, _ := m["kategori"].(string)
+	tglTerbit, _ := m["tgl_terbit"].(string)
+	ukuran, _ := m["ukuran"].(string)
+	keterangan, _ := m["keterangan"].(string)
+	fileURL, _ := m["file_url"].(string)
+	isAktif := true
+	if a, ok := m["is_aktif"].(bool); ok {
+		isAktif = a
+	}
+
+	return &model.Regulasi{
+		ID:         id,
+		Nomor:      nomor,
+		Tahun:      tahun,
+		Judul:      judul,
+		Kategori:   kategori,
+		TglTerbit:  tglTerbit,
+		Ukuran:     ukuran,
+		Keterangan: keterangan,
+		FileURL:    fileURL,
+		IsAktif:    isAktif,
+	}
 }
 
-func scanRegulasiRows(rows pgx.Rows) ([]model.Regulasi, error) {
-	items := []model.Regulasi{}
-	for rows.Next() {
-		item, err := scanRegulasi(rows)
+// List returns regulasi documents, optionally filtered by kategori and is_aktif with in-memory caching.
+func (r *RegulasiRepository) List(ctx context.Context, kategori string, onlyAktif bool) ([]model.Regulasi, error) {
+	cacheKey := fmt.Sprintf("regulasi:list:%s:%v", kategori, onlyAktif)
+
+	return cache.FetchWithSingleFlight(cache.GetDefault(), cacheKey, 3*time.Minute, func() ([]model.Regulasi, error) {
+		var parts []string
+		if kategori != "" {
+			parts = append(parts, fmt.Sprintf("kategori='%s'", kategori))
+		}
+		if onlyAktif {
+			parts = append(parts, "is_aktif=true")
+		}
+
+		filterQuery := strings.Join(parts, " && ")
+		sortQuery := "-created_at"
+
+		items, _, err := r.pb.ListRecords("regulasi", filterQuery, sortQuery, 1, 500)
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, *item)
-	}
-	return items, rows.Err()
-}
 
-// List returns regulasi documents, optionally filtered by kategori and is_aktif.
-func (r *RegulasiRepository) List(ctx context.Context, kategori string, onlyAktif bool) ([]model.Regulasi, error) {
-	sql := `SELECT ` + regulasiColumns + ` FROM "kemenag_ppid"."regulasi" WHERE 1=1`
-	args := []any{}
-	if kategori != "" {
-		args = append(args, kategori)
-		sql += ` AND "kategori" = $` + strconv.Itoa(len(args))
-	}
-	if onlyAktif {
-		args = append(args, true)
-		sql += ` AND "is_aktif" = $` + strconv.Itoa(len(args))
-	}
-	sql += ` ORDER BY "created_at" DESC`
-
-	rows, err := r.pool.Query(ctx, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return scanRegulasiRows(rows)
-}
-
-// ByID returns a single regulasi record.
-func (r *RegulasiRepository) ByID(ctx context.Context, id string) (*model.Regulasi, error) {
-	row := r.pool.QueryRow(ctx,
-		`SELECT `+regulasiColumns+` FROM "kemenag_ppid"."regulasi" WHERE "id" = $1`, id)
-	item, err := scanRegulasi(row)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, platform.NotFoundf("Regulasi tidak ditemukan.")
+		res := make([]model.Regulasi, 0, len(items))
+		for _, it := range items {
+			reg := mapToRegulasi(it)
+			if reg != nil {
+				res = append(res, *reg)
+			}
 		}
-		return nil, err
-	}
-	return item, nil
+		return res, nil
+	})
 }
 
-// Create inserts a new regulasi record.
-func (r *RegulasiRepository) Create(ctx context.Context, i *model.Regulasi) (string, error) {
-	var id string
-	err := r.pool.QueryRow(ctx,
-		`INSERT INTO "kemenag_ppid"."regulasi"
-			("nomor", "tahun", "judul", "kategori", "tgl_terbit", "ukuran", "keterangan", "file_url", "is_aktif")
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		 RETURNING "id"`,
-		i.Nomor, i.Tahun, i.Judul, i.Kategori, i.TglTerbit, i.Ukuran, i.Keterangan, i.FileURL, i.IsAktif).Scan(&id)
-	return id, err
-}
-
-// Update replaces all editable fields of a record.
-func (r *RegulasiRepository) Update(ctx context.Context, id string, i *model.Regulasi) error {
-	tag, err := r.pool.Exec(ctx,
-		`UPDATE "kemenag_ppid"."regulasi"
-		 SET "nomor" = $1, "tahun" = $2, "judul" = $3, "kategori" = $4, "tgl_terbit" = $5,
-		     "ukuran" = $6, "keterangan" = $7, "file_url" = $8, "is_aktif" = $9, "updated_at" = now()
-		 WHERE "id" = $10`,
-		i.Nomor, i.Tahun, i.Judul, i.Kategori, i.TglTerbit, i.Ukuran, i.Keterangan, i.FileURL, i.IsAktif, id)
+// ByID returns a single regulasi document.
+func (r *RegulasiRepository) ByID(ctx context.Context, id string) (*model.Regulasi, error) {
+	rec, err := r.pb.GetRecord("regulasi", id)
 	if err != nil {
-		return err
+		return nil, platform.NotFoundf("Regulasi tidak ditemukan.")
 	}
-	if tag.RowsAffected() == 0 {
+	return mapToRegulasi(rec), nil
+}
+
+// Create inserts a new regulasi document and returns its ID.
+func (r *RegulasiRepository) Create(ctx context.Context, reg *model.Regulasi) (string, error) {
+	data := map[string]interface{}{
+		"nomor":      reg.Nomor,
+		"tahun":      reg.Tahun,
+		"judul":      reg.Judul,
+		"kategori":   reg.Kategori,
+		"tgl_terbit": reg.TglTerbit,
+		"ukuran":     reg.Ukuran,
+		"keterangan": reg.Keterangan,
+		"file_url":   reg.FileURL,
+		"is_aktif":   reg.IsAktif,
+	}
+	if reg.ID != "" {
+		data["id"] = reg.ID
+	}
+
+	rec, err := r.pb.CreateRecord("regulasi", data)
+	if err != nil {
+		return "", err
+	}
+	cache.GetDefault().InvalidatePrefix("regulasi")
+	newID, _ := rec["id"].(string)
+	return newID, nil
+}
+
+// Update modifies an existing regulasi document.
+func (r *RegulasiRepository) Update(ctx context.Context, id string, reg *model.Regulasi) error {
+	data := map[string]interface{}{
+		"nomor":      reg.Nomor,
+		"tahun":      reg.Tahun,
+		"judul":      reg.Judul,
+		"kategori":   reg.Kategori,
+		"tgl_terbit": reg.TglTerbit,
+		"ukuran":     reg.Ukuran,
+		"keterangan": reg.Keterangan,
+		"file_url":   reg.FileURL,
+		"is_aktif":   reg.IsAktif,
+	}
+
+	_, err := r.pb.UpdateRecord("regulasi", id, data)
+	if err != nil {
 		return platform.NotFoundf("Regulasi tidak ditemukan.")
 	}
+	cache.GetDefault().InvalidatePrefix("regulasi")
 	return nil
 }
 
-// Delete removes a record.
+// Delete removes a regulasi document.
 func (r *RegulasiRepository) Delete(ctx context.Context, id string) error {
-	tag, err := r.pool.Exec(ctx, `DELETE FROM "kemenag_ppid"."regulasi" WHERE "id" = $1`, id)
+	err := r.pb.DeleteRecord("regulasi", id)
 	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() == 0 {
 		return platform.NotFoundf("Regulasi tidak ditemukan.")
 	}
+	cache.GetDefault().InvalidatePrefix("regulasi")
 	return nil
 }

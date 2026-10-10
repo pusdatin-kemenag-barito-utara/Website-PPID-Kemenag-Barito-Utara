@@ -83,7 +83,7 @@ interface KeberatanFormProps {
 
 export default function KeberatanForm({
 	alasanKeberatan,
-	siteKey = '0x4AAAAAADR1O_LSp1lgc3km',
+	siteKey = '',
 }: KeberatanFormProps) {
 	const [kategoriPemohon, setKategoriPemohon] = useState<'PERORANGAN' | 'LEMBAGA'>('PERORANGAN');
 	const [submitted, setSubmitted] = useState(false);

@@ -2,58 +2,81 @@ package repository
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgxpool"
+	"fmt"
 
 	"github.com/kemenag/ppid-kemenag/backend/internal/model"
+	"github.com/kemenag/ppid-kemenag/backend/internal/pocketbase"
 )
 
-// NotifikasiRepository persists notification attempts.
+// NotifikasiRepository persists notification attempts in PocketBase.
 type NotifikasiRepository struct {
-	pool *pgxpool.Pool
+	pb *pocketbase.Client
 }
 
-// NewNotifikasiRepository creates a NotifikasiRepository.
-func NewNotifikasiRepository(pool *pgxpool.Pool) *NotifikasiRepository {
-	return &NotifikasiRepository{pool: pool}
+// NewNotifikasiRepository creates a NotifikasiRepository backed by PocketBase.
+func NewNotifikasiRepository(pb *pocketbase.Client) *NotifikasiRepository {
+	return &NotifikasiRepository{pb: pb}
 }
 
 // Create stores a notification attempt.
 func (r *NotifikasiRepository) Create(ctx context.Context, n *model.Notifikasi) (*model.NotifikasiDTO, error) {
-	row := r.pool.QueryRow(ctx, `
-		INSERT INTO "kemenag_ppid"."notifikasi"
-			("permohonan_id", "channel", "penerima", "pesan", "status")
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING "id", "created_at"`,
-		n.PermohonanID, n.Channel, n.Penerima, n.Pesan, n.Status,
-	)
-	if err := row.Scan(&n.ID, &n.CreatedAt); err != nil {
+	data := map[string]interface{}{
+		"permohonan_id": n.PermohonanID,
+		"channel":       n.Channel,
+		"penerima":      n.Penerima,
+		"pesan":         n.Pesan,
+		"status":        n.Status,
+	}
+	if n.ID != "" {
+		data["id"] = n.ID
+	}
+
+	rec, err := r.pb.CreateRecord("notifikasi", data)
+	if err != nil {
 		return nil, err
 	}
+
+	n.ID, _ = rec["id"].(string)
+	n.CreatedAt = pocketbase.ParsePBTime(rec["created_at"])
+	if rec["created_at"] == nil {
+		n.CreatedAt = pocketbase.ParsePBTime(rec["created"])
+	}
+
 	return toNotifikasiDTO(n), nil
 }
 
 // ListByPermohonan returns notification history for a permohonan.
 func (r *NotifikasiRepository) ListByPermohonan(ctx context.Context, permohonanID string) ([]model.NotifikasiDTO, error) {
-	rows, err := r.pool.Query(ctx, `
-		SELECT "id", "permohonan_id", "channel", "penerima", "pesan", "status", "created_at"
-		FROM "kemenag_ppid"."notifikasi"
-		WHERE "permohonan_id" = $1
-		ORDER BY "created_at" DESC`, permohonanID)
+	filter := fmt.Sprintf("permohonan_id='%s'", permohonanID)
+	items, _, err := r.pb.ListRecords("notifikasi", filter, "-created_at", 1, 100)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	items := make([]model.NotifikasiDTO, 0)
-	for rows.Next() {
-		var n model.Notifikasi
-		if err := rows.Scan(&n.ID, &n.PermohonanID, &n.Channel, &n.Penerima, &n.Pesan, &n.Status, &n.CreatedAt); err != nil {
-			return nil, err
+	res := make([]model.NotifikasiDTO, 0, len(items))
+	for _, it := range items {
+		id, _ := it["id"].(string)
+		pid, _ := it["permohonan_id"].(string)
+		ch, _ := it["channel"].(string)
+		pen, _ := it["penerima"].(string)
+		pes, _ := it["pesan"].(string)
+		st, _ := it["status"].(string)
+		createdAt := pocketbase.ParsePBTime(it["created_at"])
+		if it["created_at"] == nil {
+			createdAt = pocketbase.ParsePBTime(it["created"])
 		}
-		items = append(items, *toNotifikasiDTO(&n))
+
+		res = append(res, model.NotifikasiDTO{
+			ID:           id,
+			PermohonanID: pid,
+			Channel:      ch,
+			Penerima:     pen,
+			Pesan:        pes,
+			Status:       st,
+			CreatedAt:    createdAt,
+		})
 	}
-	return items, rows.Err()
+	return res, nil
 }
 
 func toNotifikasiDTO(n *model.Notifikasi) *model.NotifikasiDTO {

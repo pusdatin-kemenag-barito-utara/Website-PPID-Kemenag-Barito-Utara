@@ -12,6 +12,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	flog "github.com/gofiber/fiber/v3/log"
+	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/logger"
@@ -32,6 +33,7 @@ import (
 	systemhandler "github.com/kemenag/ppid-kemenag/backend/internal/handler/http/system"
 	sophandler "github.com/kemenag/ppid-kemenag/backend/internal/handler/http/sop"
 	"github.com/kemenag/ppid-kemenag/backend/internal/middleware"
+	"github.com/kemenag/ppid-kemenag/backend/internal/pocketbase"
 	"github.com/kemenag/ppid-kemenag/backend/internal/repository"
 	"github.com/kemenag/ppid-kemenag/backend/internal/service"
 	"github.com/kemenag/ppid-kemenag/backend/internal/storage"
@@ -42,20 +44,21 @@ func main() {
 
 	ctx := context.Background()
 
-	pool, err := database.New(ctx, cfg.DatabaseURL)
-	if err != nil {
-		log.Fatalf("database: %v", err)
+	pb := pocketbase.NewClient(cfg.PocketbaseURL, cfg.PocketbaseAdminEmail, cfg.PocketbaseAdminPassword)
+	if err := pb.HealthCheck(); err != nil {
+		log.Printf("Warning: PocketBase health check returned: %v (continuing)", err)
+	} else {
+		log.Printf("PocketBase connection verified at %s", cfg.PocketbaseURL)
 	}
-	defer pool.Close()
 
-	if err := database.Migrate(ctx, pool); err != nil {
-		log.Fatalf("migrate: %v", err)
+	if err := database.EnsureAdminUser(ctx, pb, cfg); err != nil {
+		log.Printf("seed admin warning: %v", err)
 	}
-	if err := database.EnsureAdminUser(ctx, pool, cfg); err != nil {
-		log.Fatalf("seed: %v", err)
+	if err := database.EnsureSeedData(ctx, pb); err != nil {
+		log.Printf("seed data warning: %v", err)
 	}
-	if err := database.EnsureSeedData(ctx, pool); err != nil {
-		log.Fatalf("seed data: %v", err)
+	if err := database.EnsureIndexes(ctx, pb); err != nil {
+		log.Printf("ensure indexes warning: %v", err)
 	}
 
 	app := fiber.New(fiber.Config{
@@ -68,6 +71,9 @@ func main() {
 
 	app.Use(recover.New())
 	app.Use(requestid.New())
+	app.Use(compress.New(compress.Config{
+		Level: compress.LevelBestSpeed,
+	}))
 
 	// Enterprise Cloudflare & Security Headers
 	app.Use(func(c fiber.Ctx) error {
@@ -92,43 +98,43 @@ func main() {
 	}))
 
 	// --- Dependencies ---
-	userRepo := repository.NewUserRepository(pool)
+	userRepo := repository.NewUserRepository(pb)
 	authSvc := service.NewAuthService(userRepo, cfg)
 	authHandler := authhandler.NewHandler(authSvc)
 
-	informasiRepo := repository.NewInformasiRepository(pool)
+	informasiRepo := repository.NewInformasiRepository(pb)
 	informasiSvc := service.NewInformasiService(informasiRepo)
 	informasiHandler := informasihandler.NewHandler(informasiSvc)
 
-	regulasiRepo := repository.NewRegulasiRepository(pool)
+	regulasiRepo := repository.NewRegulasiRepository(pb)
 	regulasiSvc := service.NewRegulasiService(regulasiRepo)
 	regulasiHandler := regulasihandler.NewHandler(regulasiSvc)
 
-	permohonanRepo := repository.NewPermohonanRepository(pool)
+	permohonanRepo := repository.NewPermohonanRepository(pb)
 	permohonanSvc := service.NewPermohonanService(permohonanRepo)
 	permohonanHandler := permohonanhandler.NewHandler(permohonanSvc, cfg)
 
-	notifRepo := repository.NewNotifikasiRepository(pool)
+	notifRepo := repository.NewNotifikasiRepository(pb)
 	notifSvc := service.NewNotifikasiService(notifRepo, permohonanRepo, cfg)
 	notifHandler := notifikasihandler.NewHandler(notifSvc)
 
-	dataInfoRepo := repository.NewDataInformasiRepository(pool)
+	dataInfoRepo := repository.NewDataInformasiRepository(pb)
 	dataInfoSvc := service.NewDataInformasiService(dataInfoRepo)
 	dataInfoHandler := datainformasihandler.NewHandler(dataInfoSvc)
 
-	sopRepo := repository.NewSopRepository(pool)
+	sopRepo := repository.NewSopRepository(pb)
 	sopSvc := service.NewSopService(sopRepo)
 	sopHandler := sophandler.NewHandler(sopSvc)
 
 	fileStore := storage.New(cfg)
 	storageHandler := storagehandler.NewHandler(fileStore, cfg.R2PublicBaseURL)
 
-	systemRepo := repository.NewSystemRepository(pool)
+	systemRepo := repository.NewSystemRepository(pb)
 	systemSvc := service.NewSystemService(systemRepo, cfg)
 	systemHandler := systemhandler.NewHandler(systemSvc)
 
 	// --- Routes ---
-	healthHandler := health.NewHandler(pool)
+	healthHandler := health.NewHandler(pb)
 	app.Get("/health", healthHandler.Check)
 	app.Get("/api/health", healthHandler.Check)
 

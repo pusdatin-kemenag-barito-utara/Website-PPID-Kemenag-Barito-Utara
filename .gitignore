@@ -1,64 +1,115 @@
-# dependencies
+# ==========================================
+# Dependencies & Package Managers
+# ==========================================
 node_modules/
 **/node_modules/
+.pnpm-store/
+package-lock.json.backup
 
-# Astro & Frontend build artifacts
-frontend/dist/
-frontend/.astro/
+# ==========================================
+# Frontend (Astro 7 + Vite + Tailwind v4)
+# ==========================================
 dist/
+**/dist/
 build/
+**/build/
+.astro/
+**/.astro/
 .cache/
+**/.cache/
 .turbo/
+**/.turbo/
+.wrangler/
+**/.wrangler/
 
-# testing & reports
+# ==========================================
+# Backend (Go + Fiber v3 + Air)
+# ==========================================
+backend/bin/
+backend/vendor/
+tmp/
+**/tmp/
+backend/tmp/
+ppid-api
+backend/ppid-api
+*.exe
+*.test
+*.dll
+*.so
+*.dylib
+backend/backup_*/
+
+# ==========================================
+# Database & PocketBase Local Data
+# ==========================================
+pb_data/
+**/pb_data/
+pb_migrations/
+*.db
+*.db-shm
+*.db-wal
+ppid_pgdata/
+
+# ==========================================
+# Local Uploads & Static Media Storage
+# ==========================================
+uploads/
+**/uploads/
+
+# ==========================================
+# Environment Variables & Secrets
+# (Centralized in Infisical Cloud)
+# ==========================================
+.env*
+*.env
+!.env.example
+.infisical/
+**/.infisical/
+
+# ==========================================
+# Testing, Coverage & Reports
+# ==========================================
 coverage/
 test-results/
 playwright-report/
+.nyc_output/
 
-# misc & OS
-.DS_Store
-Thumbs.db
-*.pem
-
-# debug logs
+# ==========================================
+# Logs & Debugging
+# ==========================================
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.dev-*.log*
+.dev-pids.json
 
-# environment & secret files (full centralization in Infisical)
-.env*
-.infisical/
-
-# Go (backend)
-backend/bin/
-backend/vendor/
-backend/tmp/
-*.exe
-*.test
-ppid-api
-backend/ppid-api
-
-# Local uploads & file storage
-uploads/
-**/uploads/
-
-# IDE & Editor settings
+# ==========================================
+# Operating System & Editors
+# ==========================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.pem
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
 
-# AI Assistants & Temporary / Scratchpad scripts
+# ==========================================
+# AI Assistants, Scratch & Temp Scripts
+# ==========================================
 .claude/
 .opencode/
 .antigravitycli/
 .gemini/
 scratch/
-scripts/
+**/scratch/
+scripts/scratch*
 
-# Local dev orchestration
-.dev-pids.json
-.dev-*.log*
-
-# Docker local data & overrides
-ppid_pgdata/
+# ==========================================
+# Docker Local Overrides
+# ==========================================
 docker-compose.override.yml

@@ -28,8 +28,8 @@ const canonicalUrl = new URL(currentPath, siteUrl).toString();
 const ogImageUrl = `${siteUrl}/og-image.png`;
 const logoUrl = `${siteUrl}/logo-kemenag.svg`;
 const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN ?? '';
-const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? 'G-C6T6QLCCVB';
-const gtagId = import.meta.env.PUBLIC_GTAG_ID ?? 'GT-TB7R87XG';
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '';
+const gtagId = import.meta.env.PUBLIC_GTAG_ID ?? '';
 const gtmId = import.meta.env.PUBLIC_GTM_ID ?? '';
 
 const shouldHideWidgets =
@@ -191,8 +191,17 @@ const structuredData = {
 		<link rel="dns-prefetch" href="https://fonts.googleapis.com" />
 		<link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 		<link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
-		<link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
 		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+		<!-- SSR Dynamic Public Env Injection (Infisical Zero Hardcode Standard) -->
+		<script is:inline define:vars={{
+			publicEnv: {
+				PUBLIC_TURNSTILE_SITE_KEY: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '',
+				PUBLIC_API_BASE_URL: import.meta.env.PUBLIC_API_BASE_URL || '/api/v1',
+				PUBLIC_SITE_URL: import.meta.env.PUBLIC_SITE_URL || '',
+			}
+		}}>
+			window.__PUBLIC_ENV__ = publicEnv;
+		</script>
 		<link rel="preload" href="/logo-kemenag.svg" as="image" type="image/svg+xml" fetchpriority="high" />
 
 		<!-- 2. Typography: Google Font API Plus Jakarta Sans (Non-render-blocking) -->

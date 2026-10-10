@@ -86,7 +86,7 @@ interface PermohonanFormProps {
 }
 
 export default function PermohonanForm({
-	siteKey = '0x4AAAAAADR1O_LSp1lgc3km',
+	siteKey = '',
 }: PermohonanFormProps) {
 	const [kategoriPemohon, setKategoriPemohon] = useState<'PERORANGAN' | 'LEMBAGA'>('PERORANGAN');
 	const [submitted, setSubmitted] = useState(false);

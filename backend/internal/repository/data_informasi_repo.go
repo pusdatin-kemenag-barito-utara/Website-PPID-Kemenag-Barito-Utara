@@ -2,157 +2,275 @@ package repository
 
 import (
 	"context"
-	"strconv"
+	"fmt"
+	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
+	"github.com/kemenag/ppid-kemenag/backend/internal/cache"
 	"github.com/kemenag/ppid-kemenag/backend/internal/model"
+	"github.com/kemenag/ppid-kemenag/backend/internal/platform"
+	"github.com/kemenag/ppid-kemenag/backend/internal/pocketbase"
 )
 
 type DataInformasiRepository struct {
-	pool *pgxpool.Pool
+	pb *pocketbase.Client
 }
 
-func NewDataInformasiRepository(pool *pgxpool.Pool) *DataInformasiRepository {
-	return &DataInformasiRepository{pool: pool}
+func NewDataInformasiRepository(pb *pocketbase.Client) *DataInformasiRepository {
+	return &DataInformasiRepository{pb: pb}
 }
 
 // ─── STATISTIK ──────────────────────────────────────────────────────────────
 
-const statistikColumns = `"id", "label", "nilai", "satuan", "kategori", "deskripsi", "urutan", "is_aktif", "created_at", "updated_at"`
-
-func scanStatistik(row interface{ Scan(...any) error }) (*model.DataStatistik, error) {
-	var s model.DataStatistik
-	if err := row.Scan(&s.ID, &s.Label, &s.Nilai, &s.Satuan, &s.Kategori, &s.Deskripsi, &s.Urutan, &s.IsAktif, &s.CreatedAt, &s.UpdatedAt); err != nil {
-		return nil, err
+func mapToStatistik(m map[string]interface{}) *model.DataStatistik {
+	if m == nil {
+		return nil
 	}
-	return &s, nil
+	id, _ := m["id"].(string)
+	label, _ := m["label"].(string)
+	nilai, _ := m["nilai"].(string)
+	satuan, _ := m["satuan"].(string)
+	kategori, _ := m["kategori"].(string)
+	deskripsi, _ := m["deskripsi"].(string)
+	urutan := 0
+	if u, ok := m["urutan"].(float64); ok {
+		urutan = int(u)
+	}
+	isAktif := true
+	if a, ok := m["is_aktif"].(bool); ok {
+		isAktif = a
+	}
+	createdAt := pocketbase.ParsePBTime(m["created_at"])
+	if m["created_at"] == nil {
+		createdAt = pocketbase.ParsePBTime(m["created"])
+	}
+	updatedAt := pocketbase.ParsePBTime(m["updated_at"])
+	if m["updated_at"] == nil {
+		updatedAt = pocketbase.ParsePBTime(m["updated"])
+	}
+
+	return &model.DataStatistik{
+		ID:        id,
+		Label:     label,
+		Nilai:     nilai,
+		Satuan:    satuan,
+		Kategori:  kategori,
+		Deskripsi: deskripsi,
+		Urutan:    urutan,
+		IsAktif:   isAktif,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
 }
 
 func (r *DataInformasiRepository) ListStatistik(ctx context.Context, onlyAktif bool) ([]model.DataStatistik, error) {
-	query := `SELECT ` + statistikColumns + ` FROM "kemenag_ppid"."data_statistik" WHERE 1=1`
-	args := []any{}
-	if onlyAktif {
-		args = append(args, true)
-		query += ` AND "is_aktif" = $` + strconv.Itoa(len(args))
-	}
-	query += ` ORDER BY "urutan" ASC, "created_at" ASC`
+	cacheKey := fmt.Sprintf("data_statistik:list:%v", onlyAktif)
 
-	rows, err := r.pool.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+	return cache.FetchWithSingleFlight(cache.GetDefault(), cacheKey, 3*time.Minute, func() ([]model.DataStatistik, error) {
+		filter := ""
+		if onlyAktif {
+			filter = "is_aktif=true"
+		}
+		sort := "+urutan"
 
-	items := []model.DataStatistik{}
-	for rows.Next() {
-		s, err := scanStatistik(rows)
+		items, _, err := r.pb.ListRecords("data_statistik", filter, sort, 1, 500)
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, *s)
-	}
-	return items, rows.Err()
+
+		res := make([]model.DataStatistik, 0, len(items))
+		for _, it := range items {
+			s := mapToStatistik(it)
+			if s != nil {
+				res = append(res, *s)
+			}
+		}
+		return res, nil
+	})
 }
 
 func (r *DataInformasiRepository) GetStatistikByID(ctx context.Context, id string) (*model.DataStatistik, error) {
-	query := `SELECT ` + statistikColumns + ` FROM "kemenag_ppid"."data_statistik" WHERE "id" = $1`
-	row := r.pool.QueryRow(ctx, query, id)
-	return scanStatistik(row)
+	rec, err := r.pb.GetRecord("data_statistik", id)
+	if err != nil {
+		return nil, platform.NotFoundf("Data statistik tidak ditemukan.")
+	}
+	return mapToStatistik(rec), nil
 }
 
-func (r *DataInformasiRepository) CreateStatistik(ctx context.Context, item *model.DataStatistik) error {
-	query := `INSERT INTO "kemenag_ppid"."data_statistik" ("label", "nilai", "satuan", "kategori", "deskripsi", "urutan", "is_aktif")
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING "id", "created_at", "updated_at"`
-	return r.pool.QueryRow(ctx, query, item.Label, item.Nilai, item.Satuan, item.Kategori, item.Deskripsi, item.Urutan, item.IsAktif).
-		Scan(&item.ID, &item.CreatedAt, &item.UpdatedAt)
+func (r *DataInformasiRepository) CreateStatistik(ctx context.Context, s *model.DataStatistik) error {
+	data := map[string]interface{}{
+		"label":     s.Label,
+		"nilai":     s.Nilai,
+		"satuan":    s.Satuan,
+		"kategori":  s.Kategori,
+		"deskripsi": s.Deskripsi,
+		"urutan":    s.Urutan,
+		"is_aktif":  s.IsAktif,
+	}
+	if s.ID != "" {
+		data["id"] = s.ID
+	}
+
+	rec, err := r.pb.CreateRecord("data_statistik", data)
+	if err != nil {
+		return err
+	}
+	cache.GetDefault().InvalidatePrefix("data_statistik")
+	newID, _ := rec["id"].(string)
+	s.ID = newID
+	return nil
 }
 
-func (r *DataInformasiRepository) UpdateStatistik(ctx context.Context, item *model.DataStatistik) error {
-	query := `UPDATE "kemenag_ppid"."data_statistik"
-SET "label" = $1, "nilai" = $2, "satuan" = $3, "kategori" = $4, "deskripsi" = $5, "urutan" = $6, "is_aktif" = $7, "updated_at" = NOW()
-WHERE "id" = $8
-RETURNING "updated_at"`
-	return r.pool.QueryRow(ctx, query, item.Label, item.Nilai, item.Satuan, item.Kategori, item.Deskripsi, item.Urutan, item.IsAktif, item.ID).
-		Scan(&item.UpdatedAt)
+func (r *DataInformasiRepository) UpdateStatistik(ctx context.Context, s *model.DataStatistik) error {
+	data := map[string]interface{}{
+		"label":     s.Label,
+		"nilai":     s.Nilai,
+		"satuan":    s.Satuan,
+		"kategori":  s.Kategori,
+		"deskripsi": s.Deskripsi,
+		"urutan":    s.Urutan,
+		"is_aktif":  s.IsAktif,
+	}
+
+	_, err := r.pb.UpdateRecord("data_statistik", s.ID, data)
+	if err != nil {
+		return platform.NotFoundf("Data statistik tidak ditemukan.")
+	}
+	cache.GetDefault().InvalidatePrefix("data_statistik")
+	return nil
 }
 
 func (r *DataInformasiRepository) DeleteStatistik(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, `DELETE FROM "kemenag_ppid"."data_statistik" WHERE "id" = $1`, id)
-	return err
+	err := r.pb.DeleteRecord("data_statistik", id)
+	if err != nil {
+		return platform.NotFoundf("Data statistik tidak ditemukan.")
+	}
+	cache.GetDefault().InvalidatePrefix("data_statistik")
+	return nil
 }
 
 // ─── INFOGRAFIS ─────────────────────────────────────────────────────────────
 
-const infografisColumns = `"id", "judul", "kategori", "tanggal", "deskripsi", "image_url", "is_aktif", "created_at", "updated_at"`
-
-func scanInfografis(row interface{ Scan(...any) error }) (*model.DataInfografis, error) {
-	var info model.DataInfografis
-	if err := row.Scan(&info.ID, &info.Judul, &info.Kategori, &info.Tanggal, &info.Deskripsi, &info.ImageURL, &info.IsAktif, &info.CreatedAt, &info.UpdatedAt); err != nil {
-		return nil, err
+func mapToInfografis(m map[string]interface{}) *model.DataInfografis {
+	if m == nil {
+		return nil
 	}
-	return &info, nil
+	id, _ := m["id"].(string)
+	judul, _ := m["judul"].(string)
+	kategori, _ := m["kategori"].(string)
+	tanggal, _ := m["tanggal"].(string)
+	deskripsi, _ := m["deskripsi"].(string)
+	imageURL, _ := m["image_url"].(string)
+	isAktif := true
+	if a, ok := m["is_aktif"].(bool); ok {
+		isAktif = a
+	}
+	createdAt := pocketbase.ParsePBTime(m["created_at"])
+	if m["created_at"] == nil {
+		createdAt = pocketbase.ParsePBTime(m["created"])
+	}
+	updatedAt := pocketbase.ParsePBTime(m["updated_at"])
+	if m["updated_at"] == nil {
+		updatedAt = pocketbase.ParsePBTime(m["updated"])
+	}
+
+	return &model.DataInfografis{
+		ID:        id,
+		Judul:     judul,
+		Kategori:  kategori,
+		Tanggal:   tanggal,
+		Deskripsi: deskripsi,
+		ImageURL:  imageURL,
+		IsAktif:   isAktif,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
 }
 
 func (r *DataInformasiRepository) ListInfografis(ctx context.Context, kategori string, onlyAktif bool) ([]model.DataInfografis, error) {
-	query := `SELECT ` + infografisColumns + ` FROM "kemenag_ppid"."data_infografis" WHERE 1=1`
-	args := []any{}
-	if kategori != "" {
-		args = append(args, kategori)
-		query += ` AND "kategori" = $` + strconv.Itoa(len(args))
-	}
-	if onlyAktif {
-		args = append(args, true)
-		query += ` AND "is_aktif" = $` + strconv.Itoa(len(args))
-	}
-	query += ` ORDER BY "created_at" DESC`
+	cacheKey := fmt.Sprintf("data_infografis:list:%s:%v", kategori, onlyAktif)
 
-	rows, err := r.pool.Query(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+	return cache.FetchWithSingleFlight(cache.GetDefault(), cacheKey, 3*time.Minute, func() ([]model.DataInfografis, error) {
+		var parts []string
+		if kategori != "" {
+			parts = append(parts, fmt.Sprintf("kategori='%s'", kategori))
+		}
+		if onlyAktif {
+			parts = append(parts, "is_aktif=true")
+		}
+		filter := strings.Join(parts, " && ")
+		sort := "-created_at"
 
-	items := []model.DataInfografis{}
-	for rows.Next() {
-		info, err := scanInfografis(rows)
+		items, _, err := r.pb.ListRecords("data_infografis", filter, sort, 1, 500)
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, *info)
-	}
-	return items, rows.Err()
+
+		res := make([]model.DataInfografis, 0, len(items))
+		for _, it := range items {
+			info := mapToInfografis(it)
+			if info != nil {
+				res = append(res, *info)
+			}
+		}
+		return res, nil
+	})
 }
 
 func (r *DataInformasiRepository) GetInfografisByID(ctx context.Context, id string) (*model.DataInfografis, error) {
-	query := `SELECT ` + infografisColumns + ` FROM "kemenag_ppid"."data_infografis" WHERE "id" = $1`
-	row := r.pool.QueryRow(ctx, query, id)
-	return scanInfografis(row)
-}
-
-func (r *DataInformasiRepository) CreateInfografis(ctx context.Context, item *model.DataInfografis) error {
-	if item.Tanggal == "" {
-		item.Tanggal = time.Now().Format("02 Jan 2006")
+	rec, err := r.pb.GetRecord("data_infografis", id)
+	if err != nil {
+		return nil, platform.NotFoundf("Data infografis tidak ditemukan.")
 	}
-	query := `INSERT INTO "kemenag_ppid"."data_infografis" ("judul", "kategori", "tanggal", "deskripsi", "image_url", "is_aktif")
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING "id", "created_at", "updated_at"`
-	return r.pool.QueryRow(ctx, query, item.Judul, item.Kategori, item.Tanggal, item.Deskripsi, item.ImageURL, item.IsAktif).
-		Scan(&item.ID, &item.CreatedAt, &item.UpdatedAt)
+	return mapToInfografis(rec), nil
 }
 
-func (r *DataInformasiRepository) UpdateInfografis(ctx context.Context, item *model.DataInfografis) error {
-	query := `UPDATE "kemenag_ppid"."data_infografis"
-SET "judul" = $1, "kategori" = $2, "tanggal" = $3, "deskripsi" = $4, "image_url" = $5, "is_aktif" = $6, "updated_at" = NOW()
-WHERE "id" = $7
-RETURNING "updated_at"`
-	return r.pool.QueryRow(ctx, query, item.Judul, item.Kategori, item.Tanggal, item.Deskripsi, item.ImageURL, item.IsAktif, item.ID).
-		Scan(&item.UpdatedAt)
+func (r *DataInformasiRepository) CreateInfografis(ctx context.Context, info *model.DataInfografis) error {
+	data := map[string]interface{}{
+		"judul":     info.Judul,
+		"kategori":  info.Kategori,
+		"tanggal":   info.Tanggal,
+		"deskripsi": info.Deskripsi,
+		"image_url": info.ImageURL,
+		"is_aktif":  info.IsAktif,
+	}
+	if info.ID != "" {
+		data["id"] = info.ID
+	}
+
+	rec, err := r.pb.CreateRecord("data_infografis", data)
+	if err != nil {
+		return err
+	}
+	cache.GetDefault().InvalidatePrefix("data_infografis")
+	newID, _ := rec["id"].(string)
+	info.ID = newID
+	return nil
+}
+
+func (r *DataInformasiRepository) UpdateInfografis(ctx context.Context, info *model.DataInfografis) error {
+	data := map[string]interface{}{
+		"judul":     info.Judul,
+		"kategori":  info.Kategori,
+		"tanggal":   info.Tanggal,
+		"deskripsi": info.Deskripsi,
+		"image_url": info.ImageURL,
+		"is_aktif":  info.IsAktif,
+	}
+
+	_, err := r.pb.UpdateRecord("data_infografis", info.ID, data)
+	if err != nil {
+		return platform.NotFoundf("Data infografis tidak ditemukan.")
+	}
+	cache.GetDefault().InvalidatePrefix("data_infografis")
+	return nil
 }
 
 func (r *DataInformasiRepository) DeleteInfografis(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, `DELETE FROM "kemenag_ppid"."data_infografis" WHERE "id" = $1`, id)
-	return err
+	err := r.pb.DeleteRecord("data_infografis", id)
+	if err != nil {
+		return platform.NotFoundf("Data infografis tidak ditemukan.")
+	}
+	cache.GetDefault().InvalidatePrefix("data_infografis")
+	return nil
 }

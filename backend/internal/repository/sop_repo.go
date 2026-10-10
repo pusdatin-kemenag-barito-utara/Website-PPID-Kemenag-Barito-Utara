@@ -2,132 +2,155 @@ package repository
 
 import (
 	"context"
-	"strconv"
+	"fmt"
+	"strings"
+	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-
+	"github.com/kemenag/ppid-kemenag/backend/internal/cache"
 	"github.com/kemenag/ppid-kemenag/backend/internal/model"
 	"github.com/kemenag/ppid-kemenag/backend/internal/platform"
+	"github.com/kemenag/ppid-kemenag/backend/internal/pocketbase"
 )
 
-// SopRepository persists SOP documents.
+// SopRepository persists SOP documents in PocketBase.
 type SopRepository struct {
-	pool *pgxpool.Pool
+	pb *pocketbase.Client
 }
 
-// NewSopRepository creates a new SopRepository.
-func NewSopRepository(pool *pgxpool.Pool) *SopRepository {
-	return &SopRepository{pool: pool}
+// NewSopRepository creates a new SopRepository backed by PocketBase.
+func NewSopRepository(pb *pocketbase.Client) *SopRepository {
+	return &SopRepository{pb: pb}
 }
 
-const sopColumns = `"id", "judul", "no_sop", "kategori", "tgl_terbit", "ukuran", COALESCE("keterangan", ''), "file_url", "urutan", "is_aktif"`
-
-func scanSop(row interface{ Scan(...any) error }) (*model.Sop, error) {
-	var s model.Sop
-	if err := row.Scan(&s.ID, &s.Judul, &s.NoSop, &s.Kategori, &s.TglTerbit, &s.Ukuran, &s.Keterangan, &s.FileURL, &s.Urutan, &s.IsAktif); err != nil {
-		return nil, err
+func mapToSop(m map[string]interface{}) *model.Sop {
+	if m == nil {
+		return nil
 	}
-	return &s, nil
+	id, _ := m["id"].(string)
+	judul, _ := m["judul"].(string)
+	noSop, _ := m["no_sop"].(string)
+	kategori, _ := m["kategori"].(string)
+	tglTerbit, _ := m["tgl_terbit"].(string)
+	ukuran, _ := m["ukuran"].(string)
+	keterangan, _ := m["keterangan"].(string)
+	fileURL, _ := m["file_url"].(string)
+	urutan := 0
+	if u, ok := m["urutan"].(float64); ok {
+		urutan = int(u)
+	}
+	isAktif := true
+	if a, ok := m["is_aktif"].(bool); ok {
+		isAktif = a
+	}
+
+	return &model.Sop{
+		ID:         id,
+		Judul:      judul,
+		NoSop:      noSop,
+		Kategori:   kategori,
+		TglTerbit:  tglTerbit,
+		Ukuran:     ukuran,
+		Keterangan: keterangan,
+		FileURL:    fileURL,
+		Urutan:     urutan,
+		IsAktif:    isAktif,
+	}
 }
 
-func scanSopRows(rows pgx.Rows) ([]model.Sop, error) {
-	items := []model.Sop{}
-	for rows.Next() {
-		item, err := scanSop(rows)
+// List returns SOP documents, optionally filtered by kategori and is_aktif with in-memory caching.
+func (r *SopRepository) List(ctx context.Context, kategori string, onlyAktif bool) ([]model.Sop, error) {
+	cacheKey := fmt.Sprintf("sop:list:%s:%v", kategori, onlyAktif)
+
+	return cache.FetchWithSingleFlight(cache.GetDefault(), cacheKey, 3*time.Minute, func() ([]model.Sop, error) {
+		var parts []string
+		if kategori != "" {
+			parts = append(parts, fmt.Sprintf("kategori='%s'", kategori))
+		}
+		if onlyAktif {
+			parts = append(parts, "is_aktif=true")
+		}
+
+		filterQuery := strings.Join(parts, " && ")
+		sortQuery := "+urutan,-created_at"
+
+		items, _, err := r.pb.ListRecords("sop", filterQuery, sortQuery, 1, 500)
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, *item)
-	}
-	return items, rows.Err()
-}
 
-// List returns SOP documents, optionally filtered by kategori and is_aktif.
-func (r *SopRepository) List(ctx context.Context, kategori string, onlyAktif bool) ([]model.Sop, error) {
-	sql := `SELECT ` + sopColumns + ` FROM "kemenag_ppid"."sop" WHERE 1=1`
-	args := []any{}
-	if kategori != "" {
-		args = append(args, kategori)
-		sql += ` AND "kategori" = $` + strconv.Itoa(len(args))
-	}
-	if onlyAktif {
-		args = append(args, true)
-		sql += ` AND "is_aktif" = $` + strconv.Itoa(len(args))
-	}
-	sql += ` ORDER BY "urutan" ASC, "created_at" DESC`
-
-	rows, err := r.pool.Query(ctx, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return scanSopRows(rows)
+		res := make([]model.Sop, 0, len(items))
+		for _, it := range items {
+			s := mapToSop(it)
+			if s != nil {
+				res = append(res, *s)
+			}
+		}
+		return res, nil
+	})
 }
 
 // GetByID returns an SOP document by its ID.
 func (r *SopRepository) GetByID(ctx context.Context, id string) (*model.Sop, error) {
-	row := r.pool.QueryRow(ctx,
-		`SELECT `+sopColumns+` FROM "kemenag_ppid"."sop" WHERE "id" = $1`, id)
-	item, err := scanSop(row)
+	rec, err := r.pb.GetRecord("sop", id)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, platform.NotFoundf("SOP tidak ditemukan.")
-		}
-		return nil, err
+		return nil, platform.NotFoundf("SOP tidak ditemukan.")
 	}
-	return item, nil
+	return mapToSop(rec), nil
 }
 
 // Create inserts a new SOP document.
 func (r *SopRepository) Create(ctx context.Context, s *model.Sop) (*model.Sop, error) {
-	sql := `
-		INSERT INTO "kemenag_ppid"."sop"
-			("judul", "no_sop", "kategori", "tgl_terbit", "ukuran", "keterangan", "file_url", "urutan", "is_aktif")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING ` + sopColumns
-	row := r.pool.QueryRow(ctx, sql,
-		s.Judul, s.NoSop, s.Kategori, s.TglTerbit, s.Ukuran, s.Keterangan, s.FileURL, s.Urutan, s.IsAktif,
-	)
-	item, err := scanSop(row)
+	data := map[string]interface{}{
+		"judul":      s.Judul,
+		"no_sop":     s.NoSop,
+		"kategori":   s.Kategori,
+		"tgl_terbit": s.TglTerbit,
+		"ukuran":     s.Ukuran,
+		"keterangan": s.Keterangan,
+		"file_url":   s.FileURL,
+		"urutan":     s.Urutan,
+		"is_aktif":   s.IsAktif,
+	}
+	if s.ID != "" {
+		data["id"] = s.ID
+	}
+
+	rec, err := r.pb.CreateRecord("sop", data)
 	if err != nil {
 		return nil, err
 	}
-	return item, nil
+	cache.GetDefault().InvalidatePrefix("sop")
+	return mapToSop(rec), nil
 }
 
 // Update modifies an existing SOP document.
 func (r *SopRepository) Update(ctx context.Context, s *model.Sop) (*model.Sop, error) {
-	sql := `
-		UPDATE "kemenag_ppid"."sop"
-		SET "judul" = $2, "no_sop" = $3, "kategori" = $4, "tgl_terbit" = $5,
-		    "ukuran" = $6, "keterangan" = $7, "file_url" = $8, "urutan" = $9,
-		    "is_aktif" = $10, "updated_at" = now()
-		WHERE "id" = $1
-		RETURNING ` + sopColumns
-	row := r.pool.QueryRow(ctx, sql,
-		s.ID, s.Judul, s.NoSop, s.Kategori, s.TglTerbit, s.Ukuran, s.Keterangan, s.FileURL, s.Urutan, s.IsAktif,
-	)
-	item, err := scanSop(row)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, platform.NotFoundf("SOP tidak ditemukan.")
-		}
-		return nil, err
+	data := map[string]interface{}{
+		"judul":      s.Judul,
+		"no_sop":     s.NoSop,
+		"kategori":   s.Kategori,
+		"tgl_terbit": s.TglTerbit,
+		"ukuran":     s.Ukuran,
+		"keterangan": s.Keterangan,
+		"file_url":   s.FileURL,
+		"urutan":     s.Urutan,
+		"is_aktif":   s.IsAktif,
 	}
-	return item, nil
+
+	rec, err := r.pb.UpdateRecord("sop", s.ID, data)
+	if err != nil {
+		return nil, platform.NotFoundf("SOP tidak ditemukan.")
+	}
+	cache.GetDefault().InvalidatePrefix("sop")
+	return mapToSop(rec), nil
 }
 
-// Delete removes an SOP document by ID.
+// Delete removes an SOP document.
 func (r *SopRepository) Delete(ctx context.Context, id string) error {
-	ct, err := r.pool.Exec(ctx,
-		`DELETE FROM "kemenag_ppid"."sop" WHERE "id" = $1`, id)
+	err := r.pb.DeleteRecord("sop", id)
 	if err != nil {
-		return err
-	}
-	if ct.RowsAffected() == 0 {
 		return platform.NotFoundf("SOP tidak ditemukan.")
 	}
+	cache.GetDefault().InvalidatePrefix("sop")
 	return nil
 }

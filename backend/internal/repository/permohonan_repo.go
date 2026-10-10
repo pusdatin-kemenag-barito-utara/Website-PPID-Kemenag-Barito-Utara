@@ -3,155 +3,205 @@ package repository
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-
+	"github.com/kemenag/ppid-kemenag/backend/internal/cache"
 	"github.com/kemenag/ppid-kemenag/backend/internal/model"
 	"github.com/kemenag/ppid-kemenag/backend/internal/platform"
+	"github.com/kemenag/ppid-kemenag/backend/internal/pocketbase"
 )
 
-// PermohonanRepository persists public requests.
+// PermohonanRepository persists public requests in PocketBase.
 type PermohonanRepository struct {
-	pool *pgxpool.Pool
+	pb *pocketbase.Client
 }
 
-// NewPermohonanRepository creates a PermohonanRepository.
-func NewPermohonanRepository(pool *pgxpool.Pool) *PermohonanRepository {
-	return &PermohonanRepository{pool: pool}
+// NewPermohonanRepository creates a PermohonanRepository backed by PocketBase.
+func NewPermohonanRepository(pb *pocketbase.Client) *PermohonanRepository {
+	return &PermohonanRepository{pb: pb}
 }
 
-const permohonanColumns = `"id", "tiket_no", "jenis", "nama", "nik", "email", "phone", "rincian", "tujuan", "alasan", "tiket_terkait", "status", "created_at", "updated_at"`
-
-func scanPermohonan(row interface{ Scan(...any) error }) (*model.Permohonan, error) {
-	var i model.Permohonan
-	if err := row.Scan(&i.ID, &i.TiketNo, &i.Jenis, &i.Nama, &i.NIK, &i.Email, &i.Phone, &i.Rincian, &i.Tujuan, &i.Alasan, &i.TiketTerkait, &i.Status, &i.CreatedAt, &i.UpdatedAt); err != nil {
-		return nil, err
+func mapToPermohonan(m map[string]interface{}) *model.Permohonan {
+	if m == nil {
+		return nil
 	}
-	return &i, nil
-}
-
-func scanPermohonanRows(rows pgx.Rows) ([]model.Permohonan, error) {
-	items := []model.Permohonan{}
-	for rows.Next() {
-		item, err := scanPermohonan(rows)
-		if err != nil {
-			return nil, err
-		}
-		items = append(items, *item)
+	id, _ := m["id"].(string)
+	tiketNo, _ := m["tiket_no"].(string)
+	jenis, _ := m["jenis"].(string)
+	nama, _ := m["nama"].(string)
+	nik, _ := m["nik"].(string)
+	email, _ := m["email"].(string)
+	phone, _ := m["phone"].(string)
+	rincian, _ := m["rincian"].(string)
+	tujuan, _ := m["tujuan"].(string)
+	alasan, _ := m["alasan"].(string)
+	tiketTerkait, _ := m["tiket_terkait"].(string)
+	status, _ := m["status"].(string)
+	if status == "" {
+		status = "MENUNGGU"
 	}
-	return items, rows.Err()
+
+	createdAt := pocketbase.ParsePBTime(m["created_at"])
+	if m["created_at"] == nil {
+		createdAt = pocketbase.ParsePBTime(m["created"])
+	}
+	updatedAt := pocketbase.ParsePBTime(m["updated_at"])
+	if m["updated_at"] == nil {
+		updatedAt = pocketbase.ParsePBTime(m["updated"])
+	}
+
+	return &model.Permohonan{
+		ID:           id,
+		TiketNo:      tiketNo,
+		Jenis:        model.JenisPermohonan(jenis),
+		Nama:         nama,
+		NIK:          nik,
+		Email:        email,
+		Phone:        phone,
+		Rincian:      rincian,
+		Tujuan:       tujuan,
+		Alasan:       alasan,
+		TiketTerkait: tiketTerkait,
+		Status:       model.StatusPermohonan(status),
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
+	}
 }
 
-// NextTiketNo allocates the next ticket number in the shared sequence.
+// NextTiketNo allocates the next ticket number based on existing records count.
 func (r *PermohonanRepository) NextTiketNo(ctx context.Context) (string, error) {
-	var n int64
-	err := r.pool.QueryRow(ctx, `SELECT nextval('"kemenag_ppid"."permohonan_seq"')`).Scan(&n)
+	_, total, err := r.pb.ListRecords("permohonan", "", "-created_at", 1, 1)
 	if err != nil {
-		return "", err
+		total = 0
 	}
-	return fmt.Sprintf("PPID-%d-%04d", time.Now().Year(), n), nil
+	year := time.Now().Year()
+	nextNum := total + 1
+
+	for attempts := 0; attempts < 100; attempts++ {
+		candidate := fmt.Sprintf("PPID-%d-%04d", year, nextNum)
+		// Check uniqueness
+		existing, _ := r.ByTiketNo(ctx, candidate)
+		if existing == nil {
+			return candidate, nil
+		}
+		nextNum++
+	}
+
+	return fmt.Sprintf("PPID-%d-%d", year, time.Now().UnixNano()%10000), nil
 }
 
 // List returns requests, optionally filtered by status and jenis.
 func (r *PermohonanRepository) List(ctx context.Context, status, jenis string) ([]model.Permohonan, error) {
-	sql := `SELECT ` + permohonanColumns + ` FROM "kemenag_ppid"."permohonan" WHERE 1=1`
-	args := []any{}
+	var parts []string
 	if status != "" {
-		args = append(args, status)
-		sql += ` AND "status" = $` + strconv.Itoa(len(args))
+		parts = append(parts, fmt.Sprintf("status='%s'", status))
 	}
 	if jenis != "" {
-		args = append(args, jenis)
-		sql += ` AND "jenis" = $` + strconv.Itoa(len(args))
+		parts = append(parts, fmt.Sprintf("jenis='%s'", jenis))
 	}
-	sql += ` ORDER BY "created_at" DESC`
 
-	rows, err := r.pool.Query(ctx, sql, args...)
+	filterQuery := strings.Join(parts, " && ")
+	sortQuery := "-created_at"
+
+	items, _, err := r.pb.ListRecords("permohonan", filterQuery, sortQuery, 1, 500)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	return scanPermohonanRows(rows)
-}
 
-// ByTiketNo returns a single request by its ticket number.
-func (r *PermohonanRepository) ByTiketNo(ctx context.Context, tiketNo string) (*model.Permohonan, error) {
-	row := r.pool.QueryRow(ctx,
-		`SELECT `+permohonanColumns+` FROM "kemenag_ppid"."permohonan" WHERE "tiket_no" = $1`, tiketNo)
-	item, err := scanPermohonan(row)
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, platform.NewError(platform.ErrInvalidTicket, "Nomor tiket tidak ditemukan.")
+	res := make([]model.Permohonan, 0, len(items))
+	for _, it := range items {
+		p := mapToPermohonan(it)
+		if p != nil {
+			res = append(res, *p)
 		}
-		return nil, err
 	}
-	return item, nil
+	return res, nil
 }
 
-// ByID returns a single request by its internal ID (admin).
+// ByID returns a request by its ID.
 func (r *PermohonanRepository) ByID(ctx context.Context, id string) (*model.Permohonan, error) {
-	row := r.pool.QueryRow(ctx,
-		`SELECT `+permohonanColumns+` FROM "kemenag_ppid"."permohonan" WHERE "id" = $1`, id)
-	item, err := scanPermohonan(row)
+	rec, err := r.pb.GetRecord("permohonan", id)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, platform.NotFoundf("Permohonan tidak ditemukan.")
-		}
-		return nil, err
+		return nil, platform.NotFoundf("Permohonan tidak ditemukan.")
 	}
-	return item, nil
+	return mapToPermohonan(rec), nil
 }
 
-// Create inserts a new request and returns its ID and generated TiketNo if not already assigned.
-func (r *PermohonanRepository) Create(ctx context.Context, i *model.Permohonan) (string, error) {
-	var id string
-	var tiketNo string
+// GetByID is an alias for ByID.
+func (r *PermohonanRepository) GetByID(ctx context.Context, id string) (*model.Permohonan, error) {
+	return r.ByID(ctx, id)
+}
 
-	query := `INSERT INTO "kemenag_ppid"."permohonan"
-			("tiket_no", "jenis", "nama", "nik", "email", "phone", "rincian", "tujuan", "alasan", "tiket_terkait", "status")
-		 VALUES (
-			COALESCE(NULLIF($1, ''), 'PPID-' || TO_CHAR(NOW(), 'YYYY') || '-' || LPAD(NEXTVAL('"kemenag_ppid"."permohonan_seq"')::TEXT, 4, '0')),
-			$2, $3, $4, $5, $6, $7, $8, $9, $10, $11
-		 )
-		 RETURNING "id", "tiket_no"`
+// ByTiketNo returns a request by its tiket_no (cached with SingleFlight to prevent stampede).
+func (r *PermohonanRepository) ByTiketNo(ctx context.Context, tiketNo string) (*model.Permohonan, error) {
+	clean := strings.ToUpper(strings.TrimSpace(tiketNo))
+	cacheKey := "permohonan:tiket:" + clean
 
-	err := r.pool.QueryRow(ctx, query,
-		i.TiketNo, i.Jenis, i.Nama, i.NIK, i.Email, i.Phone, i.Rincian, i.Tujuan, i.Alasan, i.TiketTerkait, i.Status).Scan(&id, &tiketNo)
+	return cache.FetchWithSingleFlight(cache.Default, cacheKey, 30*time.Second, func() (*model.Permohonan, error) {
+		filter := fmt.Sprintf("tiket_no='%s'", clean)
+		items, _, err := r.pb.ListRecords("permohonan", filter, "", 1, 1)
+		if err != nil || len(items) == 0 {
+			return nil, platform.NotFoundf("Tiket %s tidak ditemukan.", tiketNo)
+		}
+		return mapToPermohonan(items[0]), nil
+	})
+}
+
+// FindByTiket is an alias for ByTiketNo.
+func (r *PermohonanRepository) FindByTiket(ctx context.Context, tiketNo string) (*model.Permohonan, error) {
+	return r.ByTiketNo(ctx, tiketNo)
+}
+
+// Create inserts a new permohonan into PocketBase and returns its ID string.
+func (r *PermohonanRepository) Create(ctx context.Context, p *model.Permohonan) (string, error) {
+	data := map[string]interface{}{
+		"tiket_no":      p.TiketNo,
+		"jenis":         string(p.Jenis),
+		"nama":          p.Nama,
+		"nik":           p.NIK,
+		"email":         p.Email,
+		"phone":         p.Phone,
+		"rincian":       p.Rincian,
+		"tujuan":        p.Tujuan,
+		"alasan":        p.Alasan,
+		"tiket_terkait": p.TiketTerkait,
+		"status":        string(p.Status),
+	}
+	if p.ID != "" {
+		data["id"] = p.ID
+	}
+
+	rec, err := r.pb.CreateRecord("permohonan", data)
 	if err != nil {
 		return "", err
 	}
-	i.TiketNo = tiketNo
-	return id, nil
+	cache.Default.InvalidatePrefix("permohonan:")
+	newID, _ := rec["id"].(string)
+	p.ID = newID
+	return newID, nil
 }
 
-// UpdateStatus changes the processing status of a request.
+// UpdateStatus changes the status of a request.
 func (r *PermohonanRepository) UpdateStatus(ctx context.Context, id, status string) error {
-	tag, err := r.pool.Exec(ctx,
-		`UPDATE "kemenag_ppid"."permohonan" SET "status" = $2, "updated_at" = now() WHERE "id" = $1`,
-		id, status)
-	if err != nil {
-		return err
+	data := map[string]interface{}{
+		"status": status,
 	}
-	if tag.RowsAffected() == 0 {
+
+	_, err := r.pb.UpdateRecord("permohonan", id, data)
+	if err != nil {
 		return platform.NotFoundf("Permohonan tidak ditemukan.")
 	}
+	cache.Default.InvalidatePrefix("permohonan:")
 	return nil
 }
 
-// Delete permanently removes a permohonan record from the database.
-// Foreign keys (e.g. notifikasi) are automatically deleted via ON DELETE CASCADE.
+// Delete removes a request.
 func (r *PermohonanRepository) Delete(ctx context.Context, id string) error {
-	tag, err := r.pool.Exec(ctx,
-		`DELETE FROM "kemenag_ppid"."permohonan" WHERE "id" = $1`,
-		id)
+	err := r.pb.DeleteRecord("permohonan", id)
 	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() == 0 {
 		return platform.NotFoundf("Permohonan tidak ditemukan.")
 	}
+	cache.Default.InvalidatePrefix("permohonan:")
 	return nil
 }

@@ -13,7 +13,9 @@ type Config struct {
 	Env     string
 	AppName string
 
-	DatabaseURL string
+	PocketbaseURL           string
+	PocketbaseAdminEmail   string
+	PocketbaseAdminPassword string
 
 	JWTSecret        string
 	JWTExpiresMinute int
@@ -41,25 +43,27 @@ type Config struct {
 func Load() *Config {
 	_ = godotenv.Load("../.env.local", ".env.local", "../../.env.local", "../.env", ".env")
 	return &Config{
-		Port:               getEnv("BACKEND_PORT", "8080"),
-		Env:                getEnv("APP_ENV", "development"),
-		AppName:            getEnv("APP_NAME", "ppid-kemenag-api"),
-		DatabaseURL:        os.Getenv("DATABASE_URL"),
-		JWTSecret:          os.Getenv("JWT_SECRET"),
-		JWTExpiresMinute:   getEnvInt("JWT_EXPIRES_MINUTES", 480),
-		TurnstileSiteKey:   getEnv("PUBLIC_TURNSTILE_SITE_KEY", os.Getenv("TURNSTILE_SITE_KEY")),
-		TurnstileSecretKey: os.Getenv("TURNSTILE_SECRET_KEY"),
-		R2AccountID:        os.Getenv("R2_ACCOUNT_ID"),
-		R2AccessKeyID:      os.Getenv("R2_ACCESS_KEY_ID"),
-		R2SecretKey:        os.Getenv("R2_SECRET_ACCESS_KEY"),
-		R2BucketName:       os.Getenv("R2_BUCKET_NAME"),
-		R2PublicBaseURL:    os.Getenv("R2_PUBLIC_BASE_URL"),
-		PusdatinURL:        os.Getenv("PUSDATIN_URL"),
-		PusdatinAppID:      os.Getenv("PUSDATIN_APP_ID"),
-		WABotWebhookURL:    os.Getenv("WA_BOT_WEBHOOK_URL"),
-		AdminEmail:         os.Getenv("ADMIN_EMAIL"),
-		AdminPassword:      os.Getenv("ADMIN_PASSWORD"),
-		AdminFullName:      os.Getenv("ADMIN_FULL_NAME"),
+		Port:                    getEnv("BACKEND_PORT", "8080"),
+		Env:                     getEnv("APP_ENV", "development"),
+		AppName:                 getEnv("APP_NAME", "ppid-kemenag-api"),
+		PocketbaseURL:           os.Getenv("POCKETBASE_URL"),
+		PocketbaseAdminEmail:    getEnv("POCKETBASE_ADMIN_EMAIL", os.Getenv("ADMIN_EMAIL")),
+		PocketbaseAdminPassword: getEnv("POCKETBASE_ADMIN_PASSWORD", os.Getenv("ADMIN_PASSWORD")),
+		JWTSecret:               os.Getenv("JWT_SECRET"),
+		JWTExpiresMinute:        getEnvInt("JWT_EXPIRES_MINUTES", 480),
+		TurnstileSiteKey:        getEnv("PUBLIC_TURNSTILE_SITE_KEY", os.Getenv("TURNSTILE_SITE_KEY")),
+		TurnstileSecretKey:      os.Getenv("TURNSTILE_SECRET_KEY"),
+		R2AccountID:             os.Getenv("R2_ACCOUNT_ID"),
+		R2AccessKeyID:           os.Getenv("R2_ACCESS_KEY_ID"),
+		R2SecretKey:             os.Getenv("R2_SECRET_ACCESS_KEY"),
+		R2BucketName:            os.Getenv("R2_BUCKET_NAME"),
+		R2PublicBaseURL:         os.Getenv("R2_PUBLIC_BASE_URL"),
+		PusdatinURL:             os.Getenv("PUSDATIN_URL"),
+		PusdatinAppID:           os.Getenv("PUSDATIN_APP_ID"),
+		WABotWebhookURL:         os.Getenv("WA_BOT_WEBHOOK_URL"),
+		AdminEmail:              getEnv("ADMIN_EMAIL", os.Getenv("POCKETBASE_ADMIN_EMAIL")),
+		AdminPassword:           getEnv("ADMIN_PASSWORD", os.Getenv("POCKETBASE_ADMIN_PASSWORD")),
+		AdminFullName:           getEnv("ADMIN_FULL_NAME", "Administrator PPID"),
 	}
 }
 

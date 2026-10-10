@@ -39,13 +39,18 @@ export default function TurnstileWidget({
 	const widgetIdRef = useRef<string | null>(null);
 	const onTokenRef = useRef(onToken);
 
+	const effectiveSiteKey =
+		siteKey ||
+		(typeof window !== 'undefined' ? (window as any).__PUBLIC_ENV__?.PUBLIC_TURNSTILE_SITE_KEY : '') ||
+		'';
+
 	// Always keep the latest onToken reference without causing Turnstile re-renders
 	useEffect(() => {
 		onTokenRef.current = onToken;
 	}, [onToken]);
 
 	useEffect(() => {
-		if (!siteKey) return;
+		if (!effectiveSiteKey) return;
 		let disposed = false;
 		let pollTimer: ReturnType<typeof setInterval> | null = null;
 		let attempts = 0;
@@ -63,7 +68,7 @@ export default function TurnstileWidget({
 				const resolvedTheme = theme === 'auto' ? (isDark ? 'dark' : 'light') : theme;
 
 				widgetIdRef.current = window.turnstile.render(containerRef.current, {
-					sitekey: siteKey,
+					sitekey: effectiveSiteKey,
 					theme: resolvedTheme,
 					size: size,
 					callback: (token) => {
@@ -123,9 +128,9 @@ export default function TurnstileWidget({
 				widgetIdRef.current = null;
 			}
 		};
-	}, [siteKey, theme, size]);
+	}, [effectiveSiteKey, theme, size]);
 
-	if (!siteKey) return null;
+	if (!effectiveSiteKey) return null;
 
 	const isFlexible = size === 'flexible';
 
