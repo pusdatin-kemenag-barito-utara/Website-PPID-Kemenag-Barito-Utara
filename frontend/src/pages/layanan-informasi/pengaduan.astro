@@ -6,7 +6,10 @@ import PengaduanForm from '../../components/react/PengaduanForm';
 import { layananInfoData } from '../../data/layanan-info';
 
 const { email, phone, whatsapp, alamat } = layananInfoData.kontakPengaduan;
-const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
+const siteKey =
+	(typeof process !== 'undefined' && (process.env.PUBLIC_TURNSTILE_SITE_KEY || process.env.TURNSTILE_SITE_KEY)) ||
+	import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ||
+	'';
 ---
 
 <Base

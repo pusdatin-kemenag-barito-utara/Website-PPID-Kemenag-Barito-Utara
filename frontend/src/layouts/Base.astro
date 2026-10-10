@@ -23,14 +23,16 @@ const {
 
 const siteTitle = exactTitle ? title : (title === defaultTitle ? title : `${title} | PPID Kemenag Barito Utara`);
 const currentPath = Astro.url.pathname;
-const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'https://ppid.kemenag-baritoutara.com';
+const siteUrl = (typeof process !== 'undefined' && (process.env.PUBLIC_SITE_URL || process.env.SITE_URL)) || import.meta.env.PUBLIC_SITE_URL || 'https://ppid.kemenag-baritoutara.com';
 const canonicalUrl = new URL(currentPath, siteUrl).toString();
 const ogImageUrl = `${siteUrl}/og-image.png`;
 const logoUrl = `${siteUrl}/logo-kemenag.svg`;
-const cfBeaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN ?? '';
-const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '';
-const gtagId = import.meta.env.PUBLIC_GTAG_ID ?? '';
-const gtmId = import.meta.env.PUBLIC_GTM_ID ?? '';
+const cfBeaconToken = (typeof process !== 'undefined' && (process.env.PUBLIC_CF_BEACON_TOKEN || process.env.CF_BEACON_TOKEN)) || import.meta.env.PUBLIC_CF_BEACON_TOKEN || '';
+const gaMeasurementId = (typeof process !== 'undefined' && (process.env.PUBLIC_GA_MEASUREMENT_ID || process.env.GA_MEASUREMENT_ID)) || import.meta.env.PUBLIC_GA_MEASUREMENT_ID || '';
+const gtagId = (typeof process !== 'undefined' && (process.env.PUBLIC_GTAG_ID || process.env.GTAG_ID)) || import.meta.env.PUBLIC_GTAG_ID || '';
+const gtmId = (typeof process !== 'undefined' && (process.env.PUBLIC_GTM_ID || process.env.GTM_ID)) || import.meta.env.PUBLIC_GTM_ID || '';
+const publicTurnstileSiteKey = (typeof process !== 'undefined' && (process.env.PUBLIC_TURNSTILE_SITE_KEY || process.env.TURNSTILE_SITE_KEY)) || import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
+const publicApiBaseUrl = (typeof process !== 'undefined' && (process.env.PUBLIC_API_BASE_URL || process.env.API_BASE_URL)) || import.meta.env.PUBLIC_API_BASE_URL || '/api/v1';
 
 const shouldHideWidgets =
 	hideNavFooter ||
@@ -195,9 +197,9 @@ const structuredData = {
 		<!-- SSR Dynamic Public Env Injection (Infisical Zero Hardcode Standard) -->
 		<script is:inline define:vars={{
 			publicEnv: {
-				PUBLIC_TURNSTILE_SITE_KEY: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '',
-				PUBLIC_API_BASE_URL: import.meta.env.PUBLIC_API_BASE_URL || '/api/v1',
-				PUBLIC_SITE_URL: import.meta.env.PUBLIC_SITE_URL || '',
+				PUBLIC_TURNSTILE_SITE_KEY: publicTurnstileSiteKey,
+				PUBLIC_API_BASE_URL: publicApiBaseUrl,
+				PUBLIC_SITE_URL: siteUrl,
 			}
 		}}>
 			window.__PUBLIC_ENV__ = publicEnv;
